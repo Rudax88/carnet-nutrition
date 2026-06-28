@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#7A1F2B">
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Carnet">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>Carnet — journal alimentaire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Mulish:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --sable-bg:#EFE4D1; --sable-card:#FBF6EC; --sable-soft:#F5ECDC; --sable-line:#E4D5BA;
+  --sable-deep:#D8C4A2; --grenat:#7A1F2B; --grenat-vif:#9A3340; --grenat-dark:#511019;
+  --grenat-soft:#A8505C; --ink:#3B2A24; --ink-soft:#6E5A4F; --sage:#6E7C56; --ochre:#C0883A;
+  --r:18px; --r-sm:12px; --r-lg:26px;
+  --sh:0 6px 22px rgba(81,16,25,.09); --sh-sm:0 2px 8px rgba(81,16,25,.07);
+  --maxw:560px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Mulish',system-ui,sans-serif;color:var(--ink);background:var(--sable-bg);
+  background-image:radial-gradient(1200px 600px at 70% -10%, #F6EEDF 0%, transparent 60%);
+  font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+h1,h2,h3,h4,.serif{font-family:'Fraunces',Georgia,serif;color:var(--grenat-dark);font-weight:600;line-height:1.15}
+.num{font-variant-numeric:tabular-nums}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:16px;color:var(--ink)}
+a{color:var(--grenat)}
+::selection{background:var(--grenat);color:#fff}
+
+.app{max-width:var(--maxw);margin:0 auto;min-height:100%;padding:0 16px calc(104px + env(safe-area-inset-bottom));position:relative}
+.topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;
+  padding:18px 4px 14px;background:linear-gradient(var(--sable-bg) 72%, transparent)}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .mark{width:34px;height:34px;border-radius:10px;background:var(--grenat);color:#F4E3CB;
+  display:grid;place-items:center;font-family:'Fraunces';font-weight:700;font-size:19px;box-shadow:var(--sh-sm)}
+.brand b{font-family:'Fraunces';font-weight:600;font-size:20px;color:var(--grenat-dark);letter-spacing:.2px}
+.brand small{display:block;font-size:11px;color:var(--ink-soft);font-weight:600;letter-spacing:.3px;margin-top:-2px}
+.iconbtn{width:40px;height:40px;border-radius:12px;background:var(--sable-card);box-shadow:var(--sh-sm);
+  display:grid;place-items:center;font-size:18px;color:var(--grenat)}
+.iconbtn:active{transform:scale(.95)}
+
+.view{display:none;animation:fade .35s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--grenat-soft)}
+.h-lg{font-size:30px;margin:2px 0 2px}
+.muted{color:var(--ink-soft)}
+.section-title{font-size:13px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--grenat-soft);margin:22px 4px 10px}
+
+.card{background:var(--sable-card);border:1px solid var(--sable-line);border-radius:var(--r);box-shadow:var(--sh-sm);padding:16px}
+.card+.card{margin-top:12px}
+.tap{cursor:pointer;transition:.15s}.tap:active{transform:scale(.99)}
+
+.daynav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0 14px}
+.daynav .arrow{width:42px;height:42px;border-radius:14px;background:var(--sable-card);box-shadow:var(--sh-sm);display:grid;place-items:center;color:var(--grenat);font-size:20px}
+.daynav .arrow:active{transform:scale(.94)}
+.daynav .today{flex:1;text-align:center}
+.daynav .today .d{font-family:'Fraunces';font-size:19px;color:var(--grenat-dark);font-weight:600;text-transform:capitalize}
+.daynav .today .s{font-size:12px;color:var(--ink-soft);font-weight:600}
+
+.balance{display:flex;align-items:center;gap:18px}
+.ring{position:relative;width:118px;height:118px;flex:none}
+.ring .lab{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ring .lab b{font-family:'Fraunces';font-size:27px;color:var(--grenat-dark);line-height:1}
+.ring .lab span{font-size:11px;color:var(--ink-soft);font-weight:700;letter-spacing:.3px}
+.balance .meta{flex:1}
+.balance .meta .row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px dashed var(--sable-line)}
+.balance .meta .row:last-child{border:0}
+.balance .meta .row span{font-size:13px;color:var(--ink-soft);font-weight:600}
+.balance .meta .row b{font-family:'Fraunces';font-size:17px;color:var(--grenat-dark)}
+.chip-status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;padding:5px 11px;border-radius:999px;margin-top:2px}
+.chip-status.def{background:#E9EBDF;color:#54603f}
+.chip-status.sur{background:#F4E6CF;color:#946323}
+.chip-status.neu{background:#EFE0DE;color:#7a3138}
+
+.meal{margin-top:16px}
+.meal>.head{display:flex;align-items:center;justify-content:space-between;margin:0 4px 8px}
+.meal>.head .t{display:flex;align-items:center;gap:9px}
+.meal>.head .t .emo{font-size:18px}
+.meal>.head .t b{font-family:'Fraunces';font-size:16px;color:var(--grenat-dark)}
+.meal>.head .kc{font-size:13px;font-weight:800;color:var(--grenat)}
+.entry{display:flex;align-items:center;gap:12px;padding:12px;background:var(--sable-card);border:1px solid var(--sable-line);border-radius:var(--r-sm);margin-bottom:8px;box-shadow:var(--sh-sm);cursor:pointer;transition:.15s}
+.entry:active{transform:scale(.99)}
+.entry .ebody{flex:1;min-width:0}
+.entry .ename{font-weight:700;color:var(--ink);font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry .esub{font-size:12px;color:var(--ink-soft);font-weight:600;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry .ekc{font-family:'Fraunces';font-weight:600;color:var(--grenat-dark);font-size:15px;white-space:nowrap}
+.empty{text-align:center;padding:40px 20px;color:var(--ink-soft)}
+.empty .big{font-size:34px;margin-bottom:8px}
+.empty b{display:block;color:var(--grenat-dark);font-family:'Fraunces';font-size:18px;margin-bottom:4px;font-weight:600}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--grenat);color:#F6E7CD;font-weight:800;font-size:15px;padding:14px 18px;border-radius:14px;box-shadow:var(--sh);letter-spacing:.2px;width:100%;transition:.15s}
+.btn:active{transform:translateY(1px) scale(.995);background:var(--grenat-vif)}
+.btn.ghost{background:var(--sable-soft);color:var(--grenat);box-shadow:var(--sh-sm);border:1px solid var(--sable-line)}
+.btn.sage{background:var(--sage);color:#fff}
+.btn.sm{width:auto;padding:9px 14px;font-size:13px;border-radius:11px}
+.btn.danger{background:#fff;color:#9a2530;border:1px solid #e7c9cc;box-shadow:none}
+
+.field{margin-bottom:14px}
+.field>label{display:block;font-size:12.5px;font-weight:800;color:var(--grenat-dark);margin:0 2px 6px;letter-spacing:.2px}
+.input,select.input,textarea.input{width:100%;padding:13px 14px;background:var(--sable-card);border:1.5px solid var(--sable-line);border-radius:13px;color:var(--ink);transition:.15s;outline:none}
+.input:focus{border-color:var(--grenat-soft);box-shadow:0 0 0 4px rgba(122,31,43,.08)}
+textarea.input{resize:vertical;min-height:60px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.hint{font-size:12px;color:var(--ink-soft);margin:6px 2px 0}
+
+.seg{display:flex;flex-wrap:wrap;gap:7px}
+.seg button{padding:9px 13px;border-radius:11px;background:var(--sable-card);border:1.5px solid var(--sable-line);font-weight:700;font-size:13px;color:var(--ink-soft);transition:.12s}
+.seg button.on{background:var(--grenat);color:#F6E7CD;border-color:var(--grenat)}
+.seg.soft button.on{background:var(--sage);border-color:var(--sage);color:#fff}
+.seg.mood button.on{background:var(--ochre);border-color:var(--ochre);color:#fff}
+
+.unit-toggle{display:flex;gap:6px;margin-bottom:10px}
+.unit-toggle button{flex:1;padding:9px;border-radius:11px;background:var(--sable-card);border:1.5px solid var(--sable-line);font-weight:800;font-size:13px;color:var(--ink-soft)}
+.unit-toggle button.on{background:var(--grenat);color:#F6E7CD;border-color:var(--grenat)}
+
+.range-top{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:2px}
+.range-val{font-family:'Fraunces';font-size:17px;color:var(--grenat-dark);font-weight:600}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:99px;background:linear-gradient(90deg,var(--sable-deep),var(--grenat-soft));outline:none;margin:8px 0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:var(--grenat);border:4px solid var(--sable-card);box-shadow:var(--sh-sm);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--grenat);border:4px solid var(--sable-card);cursor:pointer}
+
+.collap{border:1.5px dashed var(--sable-deep);border-radius:14px;overflow:hidden;margin-bottom:6px}
+.collap>.ctrl{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;font-weight:800;font-size:14px;color:var(--grenat)}
+.collap>.ctrl .chev{transition:.2s}
+.collap.open>.ctrl .chev{transform:rotate(180deg)}
+.collap>.body{display:none;padding:4px 15px 8px}
+.collap.open>.body{display:block}
+
+.ac{position:relative}
+.ac-list{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:40;background:var(--sable-card);border:1px solid var(--sable-line);border-radius:14px;box-shadow:var(--sh);max-height:300px;overflow:auto;display:none}
+.ac-list.show{display:block}
+.ac-item{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--sable-soft);cursor:pointer}
+.ac-item:last-child{border:0}
+.ac-item:hover,.ac-item.sel{background:var(--sable-soft)}
+.ac-item .n{font-weight:700;font-size:14px}
+.ac-item .n small{display:block;font-weight:600;color:var(--ink-soft);font-size:11px}
+.ac-item .k{font-family:'Fraunces';color:var(--grenat);font-size:13px;white-space:nowrap}
+.ac-item .tag{font-size:10px;font-weight:800;letter-spacing:.4px;padding:2px 6px;border-radius:6px;background:var(--sable-deep);color:var(--grenat-dark)}
+.ac-item .tag.off{background:#E4ECDB;color:#56603f}
+.ac-foot{padding:11px 14px;font-size:12.5px;font-weight:700;color:var(--grenat);display:flex;align-items:center;gap:8px;cursor:pointer}
+
+.scrim{position:fixed;inset:0;background:rgba(50,14,18,.42);backdrop-filter:blur(3px);z-index:80;display:none;align-items:flex-end;justify-content:center}
+.scrim.show{display:flex}
+.sheet{background:var(--sable-bg);width:100%;max-width:var(--maxw);max-height:92vh;overflow:auto;border-radius:26px 26px 0 0;padding:10px 18px calc(24px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(50,14,18,.3);animation:up .3s cubic-bezier(.2,.8,.2,1)}
+@media(min-width:600px){.scrim{align-items:center}.sheet{border-radius:24px;max-height:88vh}}
+@keyframes up{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+.grab{width:42px;height:5px;border-radius:99px;background:var(--sable-deep);margin:6px auto 12px}
+.sheet-x{position:absolute;top:10px;right:14px;width:38px;height:38px;border-radius:50%;border:none;background:var(--sable-deep);color:var(--grenat);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3}
+.sheet-x:active{transform:scale(.92)}
+.sheet{position:relative}
+.sheet h2{font-size:22px;margin-bottom:2px;padding-right:42px}
+.sheet .sub{color:var(--ink-soft);font-size:13px;font-weight:600;margin-bottom:16px}
+.sheet-foot{display:flex;gap:10px;margin-top:18px}
+.menu-cta{width:100%;margin-bottom:14px;background:linear-gradient(135deg,var(--grenat),var(--grenat-d));font-size:15px}
+.day-slot{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid var(--sable-deep);border-radius:16px;margin-bottom:10px;background:var(--sable-bg);cursor:pointer}
+.day-slot:active{transform:scale(.99)}
+.day-slot .ds-emo{font-size:22px;width:30px;text-align:center;flex:none}
+.day-slot .ds-body{flex:1;min-width:0}
+.day-slot .ds-meal{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);font-weight:700}
+.day-slot .ds-name{font-size:15px;font-weight:600;margin-top:1px}
+.day-slot .ds-kc{font-size:14px;font-weight:700;color:var(--grenat);flex:none}
+.day-total{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-radius:16px;background:var(--grenat);color:#fff;margin-top:4px}
+.day-total b{font-size:20px}
+.tag-mine{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#fff;background:var(--sauge,#6E7C56);border-radius:6px;padding:1px 6px;vertical-align:middle}
+
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stat{background:var(--sable-card);border:1px solid var(--sable-line);border-radius:var(--r);padding:15px;box-shadow:var(--sh-sm)}
+.stat .l{font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--grenat-soft)}
+.stat .v{font-family:'Fraunces';font-size:26px;color:var(--grenat-dark);margin-top:3px}
+.stat .v small{font-size:13px;font-family:'Mulish';font-weight:700;color:var(--ink-soft)}
+.chartbox{position:relative;height:210px}
+.chartbox.sm{height:170px}
+.period{display:flex;gap:7px;margin:2px 0 4px}
+.period button{flex:1;padding:8px;border-radius:10px;background:var(--sable-card);border:1px solid var(--sable-line);font-weight:800;font-size:12.5px;color:var(--ink-soft)}
+.period button.on{background:var(--grenat);color:#F6E7CD;border-color:var(--grenat)}
+
+.flist .frow{display:flex;align-items:center;gap:10px;padding:12px;background:var(--sable-card);border:1px solid var(--sable-line);border-radius:var(--r-sm);margin-bottom:8px;box-shadow:var(--sh-sm)}
+.flist .frow .fn{flex:1;min-width:0}
+.flist .frow .fn b{font-size:14.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flist .frow .fn span{font-size:12px;color:var(--ink-soft);font-weight:600}
+.flist .frow .fk{font-family:'Fraunces';color:var(--grenat-dark);font-size:14px}
+.flist .frow .ed{width:34px;height:34px;border-radius:10px;background:var(--sable-soft);display:grid;place-items:center;color:var(--grenat)}
+
+.rcats{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;-webkit-overflow-scrolling:touch}
+.rcats button{white-space:nowrap;padding:9px 14px;border-radius:999px;background:var(--sable-card);border:1px solid var(--sable-line);font-weight:800;font-size:13px;color:var(--ink-soft)}
+.rcats button.on{background:var(--grenat);color:#F6E7CD;border-color:var(--grenat)}
+.rcard{background:var(--sable-card);border:1px solid var(--sable-line);border-radius:var(--r);box-shadow:var(--sh-sm);padding:15px;margin-bottom:11px;cursor:pointer;transition:.15s}
+.rcard:active{transform:scale(.99)}
+.rcard .rh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.rcard h3{font-size:17px}
+.rcard .rmeta{font-size:12px;color:var(--ink-soft);font-weight:700;margin-top:4px;display:flex;gap:12px;flex-wrap:wrap}
+.rcard .rkc{font-family:'Fraunces';font-size:20px;color:var(--grenat);white-space:nowrap;text-align:right}
+.rcard .rkc small{display:block;font-family:'Mulish';font-size:11px;color:var(--ink-soft);font-weight:700}
+.rcard .rgo{font-size:12.5px;font-weight:800;color:var(--grenat-soft);margin-top:10px;letter-spacing:.2px}
+
+.rdetail .meta-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.rdetail .pill{background:var(--sable-card);border:1px solid var(--sable-line);border-radius:11px;padding:8px 12px;font-size:12.5px;font-weight:700;color:var(--ink-soft)}
+.rdetail .pill b{color:var(--grenat-dark);font-family:'Fraunces'}
+.ing-list{list-style:none;background:var(--sable-card);border:1px solid var(--sable-line);border-radius:14px;padding:6px 4px;margin-bottom:6px}
+.ing-list li{display:flex;align-items:center;gap:10px;padding:9px 12px;font-size:14px;border-bottom:1px solid var(--sable-soft)}
+.ing-list li:last-child{border:0}
+.ing-list li::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--grenat-soft);flex:none}
+.step-list{list-style:none;counter-reset:s}
+.step-list li{counter-increment:s;display:flex;gap:12px;padding:10px 2px;font-size:14.5px;line-height:1.55}
+.step-list li::before{content:counter(s);flex:none;width:26px;height:26px;border-radius:50%;background:var(--grenat);color:#F6E7CD;font-family:'Fraunces';font-weight:600;font-size:14px;display:grid;place-items:center;margin-top:1px}
+
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;justify-content:center;padding:0 12px calc(10px + env(safe-area-inset-bottom));pointer-events:none}
+.nav .inner{pointer-events:auto;display:flex;align-items:center;gap:2px;background:var(--grenat-dark);border-radius:22px;padding:8px 7px;box-shadow:0 8px 28px rgba(50,14,18,.4);width:100%;max-width:calc(var(--maxw) - 8px)}
+.nav button[data-v]{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:14px;color:#D8B7A0;font-size:10.5px;font-weight:800;letter-spacing:.2px;transition:.15s}
+.nav button[data-v] .ic{font-size:18px;line-height:1}
+.nav button[data-v].on{background:var(--grenat);color:#F8E9CF}
+.nav button[data-v]:active{transform:scale(.93)}
+.nav .addbtn{flex:0 0 auto;width:58px;height:58px;border-radius:50%;margin:-26px 6px 0;background:var(--sable-card);color:var(--grenat);font-size:30px;font-weight:300;display:grid;place-items:center;box-shadow:0 8px 20px rgba(50,14,18,.45),inset 0 0 0 3px var(--grenat);line-height:1}
+.nav .addbtn:active{transform:scale(.92)}
+
+.lock{position:fixed;inset:0;z-index:200;background:radial-gradient(900px 500px at 50% -10%, #8a2734 0%, transparent 55%), var(--grenat-dark);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;color:#F4E3CB}
+.lock.hide{display:none}
+.lock .logo{width:74px;height:74px;border-radius:22px;background:#F4E3CB;color:var(--grenat);display:grid;place-items:center;font-family:'Fraunces';font-weight:700;font-size:38px;box-shadow:0 10px 30px rgba(0,0,0,.3);margin-bottom:22px}
+.lock h1{color:#F8EBD4;font-size:30px}
+.lock p{color:#E6C3B5;font-size:14px;font-weight:600;margin:6px 0 26px}
+.lock .pin{display:flex;gap:10px;margin-bottom:18px}
+.lock .pin input{width:54px;height:62px;text-align:center;font-family:'Fraunces';font-size:26px;border-radius:15px;border:2px solid rgba(244,227,203,.25);background:rgba(255,255,255,.07);color:#F8EBD4;caret-color:#F8EBD4}
+.lock .pin input:focus{outline:none;border-color:#F4E3CB;background:rgba(255,255,255,.12)}
+.lock .err{color:#F3B6A6;font-size:13px;font-weight:700;height:18px}
+.lock .btn{max-width:240px;background:#F4E3CB;color:var(--grenat-dark)}
+
+.toast{position:fixed;bottom:calc(104px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:var(--grenat-dark);color:#F6E7CD;font-weight:700;font-size:14px;padding:12px 20px;border-radius:14px;box-shadow:var(--sh);z-index:120;opacity:0;transition:.3s;pointer-events:none;max-width:90%}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.row-split{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.mini{font-size:12px;font-weight:700;color:var(--ink-soft)}
+hr.div{border:0;border-top:1px solid var(--sable-line);margin:16px 0}
+.badge{font-size:10px;font-weight:800;letter-spacing:.4px;padding:3px 8px;border-radius:7px;background:var(--sable-deep);color:var(--grenat-dark);text-transform:uppercase}
+</style>
+</head>
+<body>
+<!-- ============ LOCK ============ -->
+<div class="lock" id="lock">
+  <div class="logo">C</div>
+  <h1>Carnet</h1>
+  <p id="lockMsg">Ton journal alimentaire, posé et bienveillant.</p>
+  <div class="pin" id="pin">
+    <input type="tel" maxlength="1" inputmode="numeric" aria-label="chiffre 1">
+    <input type="tel" maxlength="1" inputmode="numeric" aria-label="chiffre 2">
+    <input type="tel" maxlength="1" inputmode="numeric" aria-label="chiffre 3">
+    <input type="tel" maxlength="1" inputmode="numeric" aria-label="chiffre 4">
+  </div>
+  <div class="err" id="pinErr"></div>
+  <button class="btn" id="pinBtn" style="margin-top:6px">Ouvrir le carnet</button>
+</div>
+
+<!-- ============ APP ============ -->
+<div class="app" id="app" style="display:none">
+  <div class="topbar">
+    <div class="brand"><div class="mark">C</div><div><b>Carnet</b><small id="tbSub">journal du jour</small></div></div>
+    <button class="iconbtn" id="exportBtn" title="Exporter en CSV">⤓</button>
+  </div>
+
+  <!-- ====== JOURNAL ====== -->
+  <section class="view active" id="v-journal">
+    <div class="daynav">
+      <button class="arrow" id="dayPrev">‹</button>
+      <div class="today"><div class="d" id="dayLabel">—</div><div class="s" id="dayRel"></div></div>
+      <button class="arrow" id="dayNext">›</button>
+    </div>
+    <div class="card">
+      <div class="balance">
+        <div class="ring"><canvas id="ringCanvas" width="118" height="118"></canvas>
+          <div class="lab"><b id="ringMain">0</b><span id="ringSub">/ 0 kcal</span></div></div>
+        <div class="meta">
+          <div class="row"><span>Consommé</span><b class="num" id="balEaten">0</b></div>
+          <div class="row"><span>Objectif</span><b class="num" id="balTarget">—</b></div>
+          <div class="row"><span>Restant</span><b class="num" id="balLeft">—</b></div>
+          <div id="balChip"></div>
+        </div>
+      </div>
+    </div>
+    <div id="mealsHost"></div>
+  </section>
+
+  <!-- ====== RECETTES ====== -->
+  <section class="view" id="v-recipes">
+    <div class="eyebrow">Inspiration</div>
+    <h2 class="h-lg">Recettes</h2>
+    <p class="muted" style="font-size:14px;margin-bottom:12px">Ingrédients et préparation détaillés. Touche une recette pour l'ouvrir.</p>
+    <button class="btn menu-cta" id="dayMenuBtn">✨ Génère mon menu du jour</button>
+    <button class="btn ghost" id="importRecipeBtn" style="width:100%;margin:-4px 0 14px">🔗 Importer une recette depuis un lien</button>
+    <div class="rcats" id="rcats"></div>
+    <div id="recipeHost"></div>
+  </section>
+
+  <!-- ====== STATS ====== -->
+  <section class="view" id="v-stats">
+    <div class="eyebrow">Tes tendances</div>
+    <h2 class="h-lg">Statistiques</h2>
+    <div class="period" id="statPeriod">
+      <button data-d="7">7 j</button><button data-d="14" class="on">14 j</button>
+      <button data-d="30">30 j</button><button data-d="90">90 j</button>
+    </div>
+    <div class="stat-grid" style="margin-top:8px">
+      <div class="stat"><div class="l">Moyenne / jour</div><div class="v num" id="stAvg">—<small> kcal</small></div></div>
+      <div class="stat"><div class="l">Bilan période</div><div class="v num" id="stBal">—</div></div>
+    </div>
+    <div class="section-title">Calories par jour</div>
+    <div class="card"><div class="chartbox"><canvas id="chKcal"></canvas></div></div>
+    <div class="section-title">Évolution du poids</div>
+    <div class="card"><div class="chartbox sm"><canvas id="chWeight"></canvas></div>
+      <button class="btn ghost sm" id="addWeightBtn" style="margin-top:12px;width:100%">＋ Noter mon poids</button></div>
+    <div class="section-title">Répartition par repas</div>
+    <div class="card"><div class="chartbox sm"><canvas id="chMeal"></canvas></div></div>
+    <div class="section-title">Calories moyennes selon le contexte</div>
+    <div class="card">
+      <div class="seg" id="ctxPicker" style="margin-bottom:12px">
+        <button data-k="humeur" class="on">Humeur</button>
+        <button data-k="posture">Posture</button>
+        <button data-k="lieu">Lieu</button>
+        <button data-k="ecran">Écran</button>
+      </div>
+      <div class="chartbox sm"><canvas id="chCtx"></canvas></div>
+      <p class="hint" id="ctxHint"></p>
+    </div>
+    <div class="section-title">Faim moyenne</div>
+    <div class="card"><div class="chartbox sm"><canvas id="chHunger"></canvas></div>
+      <p class="hint">Niveau de faim ressenti avant et après les repas (de 0 = repu à 10 = affamé).</p></div>
+  </section>
+
+  <!-- ====== ALIMENTS ====== -->
+  <section class="view" id="v-foods">
+    <div class="eyebrow">Bibliothèque</div>
+    <h2 class="h-lg">Aliments</h2>
+    <div class="ac" style="margin:10px 0 6px"><input class="input" id="foodFilter" placeholder="Filtrer mes aliments…"></div>
+    <div class="row-split" style="margin:8px 2px 14px">
+      <span class="mini" id="foodCount">—</span>
+      <button class="btn sm" id="newFoodBtn">＋ Nouvel aliment</button>
+    </div>
+    <div class="flist" id="foodHost"></div>
+  </section>
+
+  <!-- ====== PROFIL ====== -->
+  <section class="view" id="v-profile">
+    <div class="eyebrow">À propos de toi</div>
+    <h2 class="h-lg">Profil</h2>
+    <p class="muted" style="font-size:14px;margin-bottom:14px">Ces infos servent à estimer ton métabolisme et ton objectif. Elles restent sur ton appareil.</p>
+    <div class="card">
+      <div class="field"><label>Sexe biologique</label><div class="seg" id="pSexe"><button data-v="F">Femme</button><button data-v="H">Homme</button></div></div>
+      <div class="two">
+        <div class="field"><label>Âge</label><input class="input num" id="pAge" type="number" inputmode="numeric" placeholder="ans"></div>
+        <div class="field"><label>Taille (cm)</label><input class="input num" id="pTaille" type="number" inputmode="numeric" placeholder="cm"></div>
+      </div>
+      <div class="field"><label>Poids actuel (kg)</label><input class="input num" id="pPoids" type="number" inputmode="decimal" placeholder="kg"></div>
+      <div class="field"><label>Niveau d'activité</label>
+        <select class="input" id="pActivite">
+          <option value="1.2">Sédentaire — peu ou pas de sport</option>
+          <option value="1.375">Léger — 1 à 3 séances / sem.</option>
+          <option value="1.55" selected>Modéré — 3 à 5 séances / sem.</option>
+          <option value="1.725">Soutenu — 6 à 7 séances / sem.</option>
+          <option value="1.9">Très intense — travail physique</option>
+        </select>
+      </div>
+      <div class="field"><label>Mon objectif</label>
+        <div class="seg" id="pObjectif"><button data-v="-500">Perdre</button><button data-v="0">Maintenir</button><button data-v="300">Prendre</button></div>
+        <p class="hint" id="objHint"></p>
+      </div>
+    </div>
+    <div class="section-title">Mon métabolisme</div>
+    <div class="stat-grid">
+      <div class="stat"><div class="l">Métabolisme de repos</div><div class="v num" id="mBmr">—<small> kcal</small></div></div>
+      <div class="stat"><div class="l">Dépense totale</div><div class="v num" id="mTdee">—<small> kcal</small></div></div>
+      <div class="stat"><div class="l">Objectif quotidien</div><div class="v num" id="mGoal">—<small> kcal</small></div></div>
+      <div class="stat"><div class="l">IMC</div><div class="v num" id="mImc">—</div></div>
+    </div>
+    <p class="hint" id="imcHint" style="margin:8px 4px 0"></p>
+    <div class="section-title">Ma bibliothèque</div>
+    <div class="card tap" id="goFoods">
+      <div class="row-split"><div><b style="font-size:14.5px">Gérer mes aliments</b><div class="mini" id="foodCount2">base d'aliments · ajout, édition</div></div><span style="font-size:20px;color:var(--grenat)">❦ ›</span></div>
+    </div>
+    <div class="section-title">Données &amp; sauvegarde</div>
+    <div class="card">
+      <div class="row-split"><div><b style="font-size:14px">Exporter mes données</b><div class="mini">Journal + poids au format CSV (Excel).</div></div></div>
+      <button class="btn ghost sm" id="export2" style="width:100%;margin-top:12px">⤓ Télécharger le CSV</button>
+      <hr class="div">
+      <div class="row-split"><div><b style="font-size:14px">Sauvegarde complète</b><div class="mini">Un fichier de secours à garder (USB, cloud…). Restaure tout en cas de changement de téléphone.</div></div></div>
+      <button class="btn ghost sm" id="backupBtn" style="width:100%;margin-top:12px">⬇ Télécharger ma sauvegarde</button>
+      <button class="btn ghost sm" id="restoreBtn" style="width:100%;margin-top:8px">⬆ Restaurer une sauvegarde</button>
+      <input type="file" id="restoreFile" accept="application/json,.json" style="display:none">
+      <hr class="div">
+      <div class="row-split"><div><b style="font-size:14px">Mon code</b><div class="mini">Le code qui protège ce carnet sur cet appareil.</div></div></div>
+      <button class="btn ghost sm" id="changePin" style="width:100%;margin-top:12px">Changer mon code</button>
+      <hr class="div">
+      <div class="row-split"><div><b style="font-size:14px">Tout effacer</b><div class="mini">Supprime définitivement le contenu de ce carnet.</div></div></div>
+      <button class="btn danger sm" id="wipeBtn" style="width:100%;margin-top:12px">Réinitialiser le carnet</button>
+    </div>
+    <p class="muted" style="text-align:center;font-size:12px;margin:18px 0 0">Carnet — v2 · données stockées sur cet appareil</p>
+  </section>
+
+  <!-- ====== NAV ====== -->
+  <nav class="nav"><div class="inner">
+    <button data-v="journal" class="on"><span class="ic">◔</span>Journal</button>
+    <button data-v="recipes"><span class="ic">❧</span>Recettes</button>
+    <button class="addbtn" id="navAdd" aria-label="Ajouter un aliment">＋</button>
+    <button data-v="stats"><span class="ic">∿</span>Stats</button>
+    <button data-v="profile"><span class="ic">❖</span>Profil</button>
+  </div></nav>
+</div>
+
+<div class="scrim" id="scrim"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+/* ===== CARNET v2 — vanilla JS, stockage local ===== */
+const $=(s,e=document)=>e.querySelector(s);
+const $$=(s,e=document)=>[...e.querySelectorAll(s)];
+const LS={get(k,d){try{const v=localStorage.getItem('ccj_'+k);return v?JSON.parse(v):d;}catch(e){return d;}},set(k,v){try{localStorage.setItem('ccj_'+k,JSON.stringify(v));}catch(e){}}};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const round=n=>Math.round(n);
+const todayISO=()=>{const d=new Date();d.setHours(12,0,0,0);return d.toISOString().slice(0,10);};
+
+/* Base d'aliments (pour 100 g). 7e champ = unité pièce, 8e = poids d'une unité (g) */
+const SEED_FOODS=[
+  ["Pomme",52,0.3,14,0.2,"Fruits","pomme",150],["Banane",89,1.1,23,0.3,"Fruits","banane",120],
+  ["Orange",47,0.9,12,0.1,"Fruits","orange",130],["Fraises",33,0.7,8,0.3,"Fruits"],
+  ["Raisin",69,0.7,18,0.2,"Fruits"],["Poire",57,0.4,15,0.1,"Fruits","poire",160],
+  ["Kiwi",61,1.1,15,0.5,"Fruits","kiwi",75],["Mangue",60,0.8,15,0.4,"Fruits","mangue",200],
+  ["Ananas",50,0.5,13,0.1,"Fruits"],["Clémentine",47,0.9,12,0.2,"Fruits","clémentine",70],
+  ["Pêche",39,0.9,10,0.3,"Fruits","pêche",150],["Abricot",48,1.4,11,0.4,"Fruits","abricot",50],
+  ["Pain complet",247,9,41,3.4,"Féculents","tranche",35],["Pain blanc (baguette)",271,9,55,1.3,"Féculents"],
+  ["Riz blanc cuit",130,2.7,28,0.3,"Féculents"],["Riz complet cuit",123,2.7,26,1,"Féculents"],
+  ["Pâtes cuites",158,5.8,31,0.9,"Féculents"],["Pommes de terre cuites",87,2,20,0.1,"Féculents","pomme de terre",150],
+  ["Semoule cuite",112,3.8,23,0.2,"Féculents"],["Quinoa cuit",120,4.4,21,1.9,"Féculents"],
+  ["Flocons d'avoine",372,13,60,7,"Féculents"],["Lentilles cuites",116,9,20,0.4,"Féculents"],
+  ["Pois chiches cuits",164,8.9,27,2.6,"Féculents"],["Haricots rouges cuits",127,8.7,23,0.5,"Féculents"],
+  ["Boulgour cuit",83,3,18,0.2,"Féculents"],["Patate douce cuite",90,2,21,0.1,"Féculents","patate douce",150],
+  ["Poulet (blanc) cuit",165,31,0,3.6,"Viandes & poissons"],["Dinde escalope cuite",135,29,0,1.7,"Viandes & poissons"],
+  ["Bœuf haché 5% cuit",170,26,0,7,"Viandes & poissons"],["Bœuf haché 15% cuit",215,24,0,13,"Viandes & poissons"],
+  ["Steak de bœuf",217,26,0,12,"Viandes & poissons"],["Porc filet cuit",165,28,0,5.5,"Viandes & poissons"],
+  ["Jambon blanc",110,18,1,3.5,"Viandes & poissons","tranche",45],["Saumon cuit",206,22,0,13,"Viandes & poissons"],
+  ["Cabillaud cuit",105,23,0,1,"Viandes & poissons"],["Thon au naturel",116,26,0,1,"Viandes & poissons"],
+  ["Crevettes cuites",99,24,0.2,0.3,"Viandes & poissons"],["Sardines à l'huile",208,25,0,11,"Viandes & poissons"],
+  ["Œuf",143,13,0.7,9.5,"Œufs & laitages","œuf",55],["Blanc d'œuf",52,11,0.7,0.2,"Œufs & laitages","blanc",33],
+  ["Lait demi-écrémé",46,3.3,4.8,1.6,"Œufs & laitages"],["Lait écrémé",34,3.4,5,0.1,"Œufs & laitages"],
+  ["Yaourt nature",61,3.5,4.7,3.3,"Œufs & laitages","pot",125],["Yaourt 0%",43,4.3,6,0.1,"Œufs & laitages","pot",125],
+  ["Fromage blanc 3%",72,7.5,4.5,3,"Œufs & laitages"],["Skyr",63,11,4,0.2,"Œufs & laitages","pot",150],
+  ["Emmental",380,28,0.5,29,"Œufs & laitages"],["Comté",410,27,0.5,33,"Œufs & laitages"],
+  ["Mozzarella",280,18,2.2,22,"Œufs & laitages"],["Feta",264,14,4,21,"Œufs & laitages"],
+  ["Beurre",745,0.7,0.6,82,"Matières grasses"],["Huile d'olive",899,0,0,100,"Matières grasses","c. à soupe",10],
+  ["Huile de colza",900,0,0,100,"Matières grasses","c. à soupe",10],["Margarine",720,0.2,0.7,80,"Matières grasses"],
+  ["Crème fraîche 30%",290,2.4,3,30,"Matières grasses"],["Crème légère 15%",165,3,4,15,"Matières grasses"],
+  ["Tomate",18,0.9,3.9,0.2,"Légumes","tomate",120],["Concombre",15,0.7,3.6,0.1,"Légumes"],
+  ["Carotte",41,0.9,10,0.2,"Légumes","carotte",70],["Courgette",17,1.2,3.1,0.3,"Légumes","courgette",200],
+  ["Brocoli",34,2.8,7,0.4,"Légumes"],["Haricots verts",31,1.8,7,0.1,"Légumes"],
+  ["Épinards",23,2.9,3.6,0.4,"Légumes"],["Salade verte",15,1.4,2.9,0.2,"Légumes"],
+  ["Poivron",31,1,6,0.3,"Légumes","poivron",150],["Champignons",22,3.1,3.3,0.3,"Légumes"],
+  ["Aubergine",25,1,6,0.2,"Légumes"],["Oignon",40,1.1,9,0.1,"Légumes","oignon",110],
+  ["Petits pois",81,5.4,14,0.4,"Légumes"],["Avocat",160,2,9,15,"Légumes","avocat",150],["Maïs doux",96,3.4,21,1.5,"Légumes"],
+  ["Amandes",579,21,22,50,"Oléagineux"],["Noix",654,15,14,65,"Oléagineux"],["Noisettes",628,15,17,61,"Oléagineux"],
+  ["Cacahuètes",567,26,16,49,"Oléagineux"],["Beurre de cacahuète",588,25,20,50,"Oléagineux","c. à soupe",16],
+  ["Chocolat noir 70%",598,7.8,46,43,"Sucré","carré",5],["Chocolat au lait",535,7.7,57,30,"Sucré","carré",5],
+  ["Miel",304,0.3,82,0,"Sucré","c. à café",7],["Confiture",250,0.4,60,0.1,"Sucré","c. à café",15],["Sucre",400,0,100,0,"Sucré","morceau",4],
+  ["Biscuit (petit-beurre)",450,7,72,15,"Sucré","biscuit",8],["Pain au chocolat",414,8,46,22,"Sucré","pièce",70],
+  ["Croissant",406,8,46,21,"Sucré","croissant",60],["Céréales chocolatées",385,7,77,5,"Sucré"],["Glace vanille",207,3.5,24,11,"Sucré","boule",50],
+  ["Frites",312,3.4,41,15,"Plats & snacks"],["Pizza margherita",266,11,33,10,"Plats & snacks","part",125],
+  ["Houmous",177,8,14,10,"Plats & snacks","c. à soupe",30],["Chips",536,6,53,34,"Plats & snacks"],
+  ["Tofu",76,8,1.9,4.8,"Végétal"],["Lait de soja",54,3.3,2.5,1.8,"Végétal"],["Galette de riz",387,8,82,3,"Féculents","galette",9],
+  ["Café noir",2,0.1,0,0,"Boissons","tasse",120],["Thé infusé",1,0,0.2,0,"Boissons","tasse",200],["Jus d'orange",45,0.7,10,0.2,"Boissons","verre",200],
+  ["Soda cola",42,0,11,0,"Boissons","canette",330],["Bière",43,0.5,3.6,0,"Boissons","verre",250],["Vin rouge",85,0.1,2.6,0,"Boissons","verre",120],
+  ["Myrtilles", 57, 0.7, 14, 0.3, "Fruits"],
+  ["Framboises", 52, 1.2, 12, 0.7, "Fruits"],
+  ["Mûres", 43, 1.4, 10, 0.5, "Fruits"],
+  ["Cerises", 63, 1, 16, 0.2, "Fruits"],
+  ["Melon", 34, 0.8, 8, 0.2, "Fruits"],
+  ["Pastèque", 30, 0.6, 8, 0.2, "Fruits"],
+  ["Pamplemousse", 42, 0.8, 11, 0.1, "Fruits", "pamplemousse", 250],
+  ["Citron", 29, 1.1, 9, 0.3, "Fruits", "citron", 100],
+  ["Figue", 74, 0.8, 19, 0.3, "Fruits", "figue", 50],
+  ["Prune", 46, 0.7, 11, 0.3, "Fruits", "prune", 60],
+  ["Nectarine", 44, 1.1, 11, 0.3, "Fruits", "nectarine", 140],
+  ["Grenade", 83, 1.7, 19, 1.2, "Fruits"],
+  ["Litchi", 66, 0.8, 17, 0.4, "Fruits"],
+  ["Datte", 282, 2.5, 75, 0.4, "Fruits", "datte", 8],
+  ["Pruneau", 240, 2.2, 64, 0.4, "Fruits", "pruneau", 10],
+  ["Raisins secs", 299, 3.1, 79, 0.5, "Fruits"],
+  ["Abricot sec", 241, 3.4, 63, 0.5, "Fruits", "abricot sec", 8],
+  ["Compote (sans sucre)", 42, 0.3, 10, 0.1, "Fruits", "gourde", 90],
+  ["Mandarine", 53, 0.8, 13, 0.3, "Fruits", "mandarine", 70],
+  ["Cassis", 63, 1.4, 15, 0.4, "Fruits"],
+  ["Tomate cerise", 18, 0.9, 3.9, 0.2, "Légumes", "tomate cerise", 10],
+  ["Chou-fleur", 25, 1.9, 5, 0.3, "Légumes"],
+  ["Chou vert", 25, 1.3, 6, 0.1, "Légumes"],
+  ["Chou de Bruxelles", 43, 3.4, 9, 0.3, "Légumes"],
+  ["Chou rouge", 31, 1.4, 7, 0.2, "Légumes"],
+  ["Asperges", 20, 2.2, 3.9, 0.1, "Légumes"],
+  ["Betterave", 43, 1.6, 10, 0.2, "Légumes"],
+  ["Céleri branche", 16, 0.7, 3, 0.2, "Légumes"],
+  ["Céleri rave", 42, 1.5, 9, 0.3, "Légumes"],
+  ["Endive", 17, 1, 3.4, 0.2, "Légumes", "endive", 100],
+  ["Fenouil", 31, 1.2, 7, 0.2, "Légumes"],
+  ["Navet", 28, 0.9, 6, 0.1, "Légumes"],
+  ["Radis", 16, 0.7, 3.4, 0.1, "Légumes"],
+  ["Poireau", 31, 1.5, 7, 0.3, "Légumes", "poireau", 150],
+  ["Potiron", 26, 1, 6, 0.1, "Légumes"],
+  ["Courge butternut", 45, 1, 11, 0.1, "Légumes"],
+  ["Roquette", 25, 2.6, 3.7, 0.7, "Légumes"],
+  ["Mâche", 21, 2, 3.6, 0.4, "Légumes"],
+  ["Artichaut", 47, 3.3, 11, 0.2, "Légumes", "artichaut", 120],
+  ["Blette", 19, 1.8, 3.7, 0.2, "Légumes"],
+  ["Ail", 149, 6, 33, 0.5, "Légumes", "gousse", 5],
+  ["Échalote", 72, 2.5, 17, 0.1, "Légumes", "échalote", 30],
+  ["Gingembre", 80, 1.8, 18, 0.8, "Légumes"],
+  ["Olives vertes", 145, 1, 6, 15, "Légumes", "olive", 4],
+  ["Olives noires", 162, 1.2, 6, 15, "Légumes", "olive", 4],
+  ["Cornichon", 12, 0.6, 2.6, 0.2, "Légumes", "cornichon", 10],
+  ["Fève cuite", 72, 5.6, 11, 0.6, "Légumes"],
+  ["Potimarron", 40, 1.4, 8, 0.5, "Légumes"],
+  ["Pain de mie", 280, 8, 49, 4.5, "Féculents", "tranche", 30],
+  ["Pain aux céréales", 259, 9, 43, 4, "Féculents", "tranche", 40],
+  ["Biscotte", 386, 11, 75, 5, "Féculents", "biscotte", 8],
+  ["Pain pita", 275, 9, 55, 1.7, "Féculents", "pita", 60],
+  ["Tortilla de blé", 310, 8, 50, 8, "Féculents", "tortilla", 50],
+  ["Pâtes complètes cuites", 124, 5, 26, 1.1, "Féculents"],
+  ["Nouilles chinoises cuites", 138, 4.5, 25, 2.1, "Féculents"],
+  ["Gnocchi", 160, 3.5, 30, 2.5, "Féculents"],
+  ["Polenta cuite", 85, 2, 18, 0.4, "Féculents"],
+  ["Couscous cuit", 112, 3.8, 23, 0.2, "Féculents"],
+  ["Riz basmati cuit", 121, 2.5, 25, 0.4, "Féculents"],
+  ["Blé précuit", 130, 4.5, 26, 0.6, "Féculents"],
+  ["Haricots blancs cuits", 139, 9.7, 25, 0.5, "Féculents"],
+  ["Flageolets cuits", 87, 6.6, 15, 0.4, "Féculents"],
+  ["Pois cassés cuits", 118, 8.3, 21, 0.4, "Féculents"],
+  ["Müesli", 367, 9, 60, 8, "Féculents"],
+  ["Granola", 471, 9, 64, 18, "Féculents"],
+  ["Corn flakes", 378, 7, 84, 0.9, "Féculents"],
+  ["Crêpe nature", 180, 6, 26, 5, "Féculents", "crêpe", 60],
+  ["Blini", 220, 7, 38, 4, "Féculents", "blini", 15],
+  ["Purée de pommes de terre", 83, 1.8, 13, 2.5, "Féculents"],
+  ["Pain complet (tranche)", 247, 9, 41, 3.4, "Féculents", "tranche", 35],
+  ["Cuisse de poulet cuite", 215, 27, 0, 12, "Viandes & poissons"],
+  ["Magret de canard", 280, 20, 0, 22, "Viandes & poissons"],
+  ["Côte d'agneau", 280, 25, 0, 20, "Viandes & poissons"],
+  ["Escalope de veau", 172, 31, 0, 5, "Viandes & poissons"],
+  ["Lapin", 173, 30, 0, 6, "Viandes & poissons"],
+  ["Saucisse", 290, 14, 2, 25, "Viandes & poissons", "saucisse", 70],
+  ["Merguez", 280, 15, 1, 24, "Viandes & poissons", "merguez", 60],
+  ["Lardons", 280, 15, 1, 24, "Viandes & poissons"],
+  ["Bacon", 280, 20, 0, 22, "Viandes & poissons", "tranche", 10],
+  ["Saucisson sec", 460, 25, 1, 38, "Viandes & poissons", "tranche", 6],
+  ["Chorizo", 450, 24, 2, 38, "Viandes & poissons", "tranche", 6],
+  ["Pâté", 330, 13, 2, 30, "Viandes & poissons"],
+  ["Truite", 119, 21, 0, 3.5, "Viandes & poissons"],
+  ["Maquereau", 205, 19, 0, 14, "Viandes & poissons"],
+  ["Dorade", 96, 20, 0, 1.5, "Viandes & poissons"],
+  ["Bar", 97, 21, 0, 1.5, "Viandes & poissons"],
+  ["Sole", 86, 18, 0, 1.3, "Viandes & poissons"],
+  ["Lieu noir", 80, 18, 0, 0.9, "Viandes & poissons"],
+  ["Moules cuites", 86, 12, 4, 2.2, "Viandes & poissons"],
+  ["Huître", 68, 7, 4, 1.7, "Viandes & poissons", "huître", 15],
+  ["Calamar", 92, 16, 3, 1.4, "Viandes & poissons"],
+  ["Surimi", 95, 8, 12, 1, "Viandes & poissons", "bâtonnet", 17],
+  ["Saumon fumé", 180, 25, 0, 9, "Viandes & poissons", "tranche", 20],
+  ["Steak haché 15% cru", 215, 19, 0, 15, "Viandes & poissons", "steak", 100],
+  ["Lait entier", 64, 3.2, 4.8, 3.6, "Œufs & laitages"],
+  ["Yaourt grec", 115, 4, 4, 9, "Œufs & laitages", "pot", 125],
+  ["Yaourt aux fruits", 90, 3.5, 14, 2, "Œufs & laitages", "pot", 125],
+  ["Petit-suisse", 90, 8, 4, 5, "Œufs & laitages", "petit-suisse", 60],
+  ["Fromage blanc 0%", 47, 8, 4, 0.2, "Œufs & laitages"],
+  ["Cottage cheese", 98, 11, 3, 4.3, "Œufs & laitages"],
+  ["Chèvre frais", 270, 18, 2, 21, "Œufs & laitages"],
+  ["Camembert", 290, 20, 0.5, 23, "Œufs & laitages", "part", 30],
+  ["Brie", 330, 19, 0.5, 28, "Œufs & laitages", "part", 30],
+  ["Roquefort", 370, 19, 2, 31, "Œufs & laitages"],
+  ["Gruyère", 410, 30, 0.4, 32, "Œufs & laitages"],
+  ["Parmesan", 431, 38, 4, 29, "Œufs & laitages", "c. à soupe", 6],
+  ["Cheddar", 410, 25, 1.3, 34, "Œufs & laitages", "tranche", 20],
+  ["Raclette", 360, 23, 1, 29, "Œufs & laitages", "tranche", 30],
+  ["Ricotta", 146, 7, 3, 11, "Œufs & laitages"],
+  ["Mascarpone", 355, 4.5, 4, 36, "Œufs & laitages"],
+  ["Crème dessert", 120, 3, 18, 4, "Œufs & laitages", "pot", 125],
+  ["Chèvre (bûche)", 290, 18, 1, 24, "Œufs & laitages"],
+  ["Huile de tournesol", 900, 0, 0, 100, "Matières grasses", "c. à soupe", 10],
+  ["Huile de noix", 900, 0, 0, 100, "Matières grasses", "c. à soupe", 10],
+  ["Mayonnaise", 700, 1, 2, 77, "Matières grasses", "c. à soupe", 13],
+  ["Vinaigrette", 450, 0.5, 6, 47, "Matières grasses", "c. à soupe", 15],
+  ["Noix de cajou", 553, 18, 30, 44, "Oléagineux"],
+  ["Pistaches", 562, 20, 28, 45, "Oléagineux"],
+  ["Noix de pécan", 691, 9, 14, 72, "Oléagineux"],
+  ["Graines de courge", 559, 30, 11, 49, "Oléagineux"],
+  ["Graines de tournesol", 584, 21, 20, 51, "Oléagineux"],
+  ["Graines de chia", 486, 17, 42, 31, "Oléagineux", "c. à soupe", 12],
+  ["Graines de lin", 534, 18, 29, 42, "Oléagineux", "c. à soupe", 10],
+  ["Pignons de pin", 673, 14, 13, 68, "Oléagineux"],
+  ["Purée d'amande", 628, 21, 19, 56, "Oléagineux", "c. à soupe", 16],
+  ["Noix de coco râpée", 660, 7, 24, 64, "Oléagineux"],
+  ["Pâte à tartiner", 539, 6, 57, 31, "Sucré", "c. à soupe", 20],
+  ["Sirop d'érable", 260, 0, 67, 0, "Sucré", "c. à soupe", 20],
+  ["Madeleine", 450, 6, 55, 22, "Sucré", "madeleine", 25],
+  ["Cookie", 480, 5, 65, 22, "Sucré", "cookie", 15],
+  ["Brownie", 470, 6, 55, 25, "Sucré", "part", 40],
+  ["Muffin", 380, 5, 50, 18, "Sucré", "muffin", 70],
+  ["Gaufre", 290, 6, 40, 12, "Sucré", "gaufre", 40],
+  ["Pain d'épices", 350, 4, 75, 4, "Sucré", "tranche", 25],
+  ["Quatre-quarts", 420, 6, 52, 21, "Sucré", "part", 40],
+  ["Tarte aux pommes", 240, 2.5, 35, 10, "Sucré", "part", 120],
+  ["Éclair", 280, 5, 30, 15, "Sucré", "éclair", 90],
+  ["Macaron", 400, 5, 65, 14, "Sucré", "macaron", 12],
+  ["Bonbons gélifiés", 340, 6, 80, 0, "Sucré"],
+  ["Spéculoos", 470, 6, 70, 18, "Sucré", "biscuit", 6],
+  ["Barre chocolatée", 480, 6, 62, 22, "Sucré", "barre", 45],
+  ["Riz au lait", 130, 3.5, 20, 3.5, "Sucré", "pot", 120],
+  ["Sorbet", 130, 0.4, 32, 0.1, "Sucré", "boule", 50],
+  ["Chouquette", 380, 7, 50, 16, "Sucré", "chouquette", 12],
+  ["Quiche lorraine", 280, 9, 20, 18, "Plats & snacks", "part", 150],
+  ["Croque-monsieur", 280, 14, 22, 15, "Plats & snacks", "croque", 120],
+  ["Hamburger", 250, 12, 25, 11, "Plats & snacks", "burger", 150],
+  ["Hot-dog", 250, 9, 22, 14, "Plats & snacks", "hot-dog", 100],
+  ["Kebab", 215, 12, 18, 11, "Plats & snacks"],
+  ["Lasagnes", 130, 7, 12, 6, "Plats & snacks"],
+  ["Hachis parmentier", 120, 6, 12, 5, "Plats & snacks"],
+  ["Gratin dauphinois", 160, 3.5, 15, 9, "Plats & snacks"],
+  ["Ratatouille", 60, 1.5, 7, 3, "Plats & snacks"],
+  ["Maki", 130, 4, 26, 1, "Plats & snacks", "pièce", 18],
+  ["Nem", 250, 8, 25, 13, "Plats & snacks", "nem", 40],
+  ["Samoussa", 290, 8, 28, 16, "Plats & snacks", "samoussa", 40],
+  ["Falafel", 330, 13, 32, 17, "Plats & snacks", "falafel", 20],
+  ["Nuggets", 250, 15, 15, 14, "Plats & snacks", "nugget", 18],
+  ["Cordon bleu", 240, 15, 12, 15, "Plats & snacks", "pièce", 100],
+  ["Pâtes bolognaise", 140, 7, 16, 5, "Plats & snacks"],
+  ["Riz cantonais", 145, 5, 22, 4, "Plats & snacks"],
+  ["Soupe de légumes", 40, 1.5, 7, 0.8, "Plats & snacks", "bol", 250],
+  ["Taboulé", 130, 3, 22, 3, "Plats & snacks"],
+  ["Salade César", 180, 9, 8, 13, "Plats & snacks"],
+  ["Pop-corn", 480, 9, 60, 22, "Plats & snacks", "bol", 30],
+  ["Crackers", 430, 9, 68, 13, "Plats & snacks", "cracker", 6],
+  ["Chips tortilla", 500, 7, 60, 25, "Plats & snacks"],
+  ["Bretzel", 380, 10, 72, 4, "Plats & snacks", "bretzel", 40],
+  ["Lait d'amande", 24, 0.5, 3, 1.1, "Végétal", "verre", 200],
+  ["Lait d'avoine", 45, 1, 7, 1.5, "Végétal", "verre", 200],
+  ["Lait de coco", 230, 2.3, 6, 24, "Végétal"],
+  ["Tofu fumé", 145, 16, 2, 8, "Végétal"],
+  ["Tempeh", 190, 19, 9, 11, "Végétal"],
+  ["Steak végétal", 180, 18, 8, 8, "Végétal", "steak", 100],
+  ["Seitan", 140, 25, 4, 2, "Végétal"],
+  ["Protéine de soja texturée", 340, 52, 30, 1, "Végétal"],
+  ["Yaourt de soja", 50, 4, 3, 2.5, "Végétal", "pot", 100],
+  ["Galette végétale", 200, 8, 20, 10, "Végétal", "galette", 80],
+  ["Sauce soja", 60, 6, 6, 0, "Condiments", "c. à soupe", 15],
+  ["Ketchup", 110, 1.2, 26, 0.2, "Condiments", "c. à soupe", 15],
+  ["Moutarde", 150, 8, 5, 11, "Condiments", "c. à café", 5],
+  ["Sauce tomate", 35, 1.5, 6, 0.7, "Condiments"],
+  ["Pesto", 450, 5, 6, 45, "Condiments", "c. à soupe", 15],
+  ["Sauce barbecue", 170, 1, 40, 0.5, "Condiments", "c. à soupe", 17],
+  ["Vinaigre balsamique", 88, 0.5, 17, 0, "Condiments", "c. à soupe", 15],
+  ["Levure maltée", 350, 48, 20, 5, "Condiments", "c. à soupe", 8],
+  ["Eau", 0, 0, 0, 0, "Boissons", "verre", 250],
+  ["Café au lait", 40, 2, 3, 2, "Boissons", "tasse", 150],
+  ["Cappuccino", 60, 3, 6, 3, "Boissons", "tasse", 150],
+  ["Chocolat chaud", 90, 3.5, 12, 3, "Boissons", "tasse", 200],
+  ["Smoothie", 60, 1, 14, 0.3, "Boissons", "verre", 250],
+  ["Jus de pomme", 46, 0.1, 11, 0.1, "Boissons", "verre", 200],
+  ["Limonade", 40, 0, 10, 0, "Boissons", "verre", 250],
+  ["Sirop dilué", 22, 0, 5, 0, "Boissons", "verre", 200],
+  ["Boisson énergisante", 45, 0, 11, 0, "Boissons", "canette", 250],
+  ["Vin blanc", 82, 0.1, 2.6, 0, "Boissons", "verre", 120],
+  ["Champagne", 80, 0.2, 1.4, 0, "Boissons", "flûte", 100],
+  ["Mojito", 150, 0, 16, 0, "Boissons", "verre", 200]
+];
+const UNIT_BY_NAME={}; SEED_FOODS.forEach(f=>{if(f[6])UNIT_BY_NAME[f[0]]={unite:f[6],gUnite:f[7]};});
+
+/* Recettes complètes */
+const SEED_RECIPES=[
+ {cat:"Petit déjeuner",nom:"Porridge avoine-banane",kcal:340,portions:1,t:"10 min",
+  ing:["50 g de flocons d'avoine","200 ml de lait demi-écrémé","1 banane","1 c. à café de miel","1 pincée de cannelle"],
+  etapes:["Verse les flocons et le lait dans une petite casserole.","Chauffe à feu moyen 4 à 5 min en remuant, jusqu'à épaississement.","Écrase une demi-banane dans le porridge, coupe le reste en rondelles.","Verse dans un bol, ajoute les rondelles, le miel et la cannelle."]},
+ {cat:"Petit déjeuner",nom:"Œufs brouillés & tartine",kcal:330,portions:1,t:"10 min",
+  ing:["2 œufs","1 c. à café de beurre","1 tranche de pain complet","sel, poivre","ciboulette"],
+  etapes:["Bats les œufs avec sel et poivre.","Fais fondre le beurre à feu doux dans une poêle.","Verse les œufs et remue sans arrêt 2 à 3 min jusqu'à une texture crémeuse.","Toaste le pain, dépose les œufs dessus et parsème de ciboulette."]},
+ {cat:"Petit déjeuner",nom:"Bowl skyr, fruits & amandes",kcal:290,portions:1,t:"5 min",
+  ing:["200 g de skyr","100 g de fruits rouges","15 g d'amandes","1 c. à café de miel"],
+  etapes:["Verse le skyr dans un bol.","Ajoute les fruits rouges.","Concasse les amandes et parsème.","Termine par un filet de miel."]},
+ {cat:"Déjeuner",nom:"Buddha bowl quinoa-pois chiches",kcal:520,portions:1,t:"20 min",
+  ing:["60 g de quinoa (cru)","100 g de pois chiches cuits","1 carotte","½ avocat","2 c. à soupe de houmous","½ citron"],
+  etapes:["Rince le quinoa, cuis-le 12 à 15 min dans deux fois son volume d'eau bouillante salée.","Râpe la carotte, égoutte les pois chiches.","Dresse le quinoa dans un bol, dispose carotte, pois chiches et avocat en tranches.","Ajoute le houmous et arrose de jus de citron."]},
+ {cat:"Déjeuner",nom:"Poulet, riz complet & brocoli",kcal:560,portions:1,t:"25 min",
+  ing:["130 g de blanc de poulet","60 g de riz complet (cru)","150 g de brocoli","1 c. à soupe de sauce soja","1 c. à café d'huile d'olive"],
+  etapes:["Cuis le riz selon les indications du paquet.","Coupe le poulet en lamelles et saisis-le à l'huile 6 à 8 min.","Cuis le brocoli à la vapeur environ 6 min.","Réunis le tout dans la poêle et déglace à la sauce soja."]},
+ {cat:"Déjeuner",nom:"Salade thon, haricots & maïs",kcal:430,portions:1,t:"10 min",
+  ing:["80 g de thon au naturel égoutté","120 g de haricots rouges cuits","80 g de maïs","1 tomate","1 c. à soupe d'huile d'olive","vinaigre, sel, poivre"],
+  etapes:["Égoutte le thon, les haricots et le maïs.","Coupe la tomate en dés.","Mélange le tout dans un saladier.","Assaisonne d'huile, vinaigre, sel et poivre."]},
+ {cat:"Déjeuner",nom:"Wrap poulet-crudités",kcal:480,portions:1,t:"10 min",
+  ing:["1 grande galette de blé","80 g de poulet cuit","quelques feuilles de salade","½ tomate","2 c. à soupe de fromage blanc","½ citron"],
+  etapes:["Mélange le fromage blanc avec le citron et une pincée de sel.","Étale cette sauce sur la galette.","Garnis de salade, tomate et poulet.","Roule serré et coupe en deux."]},
+ {cat:"Dîner",nom:"Soupe de lentilles aux légumes",kcal:340,portions:2,t:"30 min",
+  ing:["150 g de lentilles","1 carotte","1 oignon","1 c. à soupe de concentré de tomate","1 c. à café de cumin","1 c. à soupe d'huile d'olive"],
+  etapes:["Émince l'oignon, coupe la carotte en dés.","Fais-les revenir à l'huile 3 min.","Ajoute les lentilles rincées, le concentré et le cumin.","Couvre d'1 litre d'eau, porte à ébullition puis laisse mijoter 25 min.","Mixe en partie si tu préfères une texture plus onctueuse."]},
+ {cat:"Dîner",nom:"Cabillaud, courgette & patate douce",kcal:330,portions:1,t:"25 min",
+  ing:["150 g de cabillaud","1 petite courgette","150 g de patate douce","1 c. à café d'huile d'olive","½ citron, herbes"],
+  etapes:["Préchauffe le four à 200 °C.","Coupe patate douce et courgette en cubes, enrobe d'huile et enfourne 15 min.","Ajoute le cabillaud, le citron et les herbes.","Poursuis la cuisson 10 min, jusqu'à ce que la chair du poisson soit nacrée."]},
+ {cat:"Dîner",nom:"Dahl de pois chiches",kcal:450,portions:2,t:"25 min",
+  ing:["250 g de pois chiches cuits","200 ml de lait de coco léger","100 g d'épinards","1 oignon","1 c. à café de curry","100 g de riz (cru)"],
+  etapes:["Cuis le riz.","Émince l'oignon et fais-le revenir 3 min.","Ajoute le curry, les pois chiches et le lait de coco, laisse mijoter 10 min.","Incorpore les épinards jusqu'à ce qu'ils réduisent.","Sers sur le riz."]},
+ {cat:"Dîner",nom:"Poêlée de tofu & légumes",kcal:400,portions:1,t:"20 min",
+  ing:["150 g de tofu ferme","1 poivron","1 petite courgette","1 c. à soupe de sauce soja","1 c. à café d'huile","graines de sésame"],
+  etapes:["Éponge et coupe le tofu en cubes.","Dore-le à l'huile 6 à 8 min puis réserve.","Fais sauter poivron et courgette en dés 6 min.","Remets le tofu, ajoute la sauce soja et parsème de sésame."]},
+ {cat:"En-cas",nom:"Tartine banane & cacahuète",kcal:250,portions:1,t:"3 min",
+  ing:["1 tranche de pain complet","1 c. à soupe de beurre de cacahuète","½ banane"],
+  etapes:["Toaste le pain.","Étale le beurre de cacahuète.","Dispose la banane en rondelles."]},
+ {cat:"En-cas",nom:"Houmous & bâtonnets de légumes",kcal:160,portions:1,t:"5 min",
+  ing:["60 g de houmous","1 carotte","½ concombre"],
+  etapes:["Coupe la carotte et le concombre en bâtonnets.","Sers-les avec le houmous."]},
+ {cat:"En-cas",nom:"Yaourt, miel & noix",kcal:170,portions:1,t:"2 min",
+  ing:["1 yaourt nature","1 c. à café de miel","2 noix"],
+  etapes:["Verse le yaourt dans un bol.","Ajoute le miel.","Concasse les noix par-dessus."]},
+ {"cat": "Petit déjeuner", "nom": "Pancakes moelleux", "kcal": 380, "portions": 2, "t": "15 min", "ing": ["120 g de farine", "1 œuf", "150 ml de lait", "1 c. à café de levure", "1 c. à café de sucre", "1 pincée de sel"], "etapes": ["Mélange la farine, la levure, le sucre et le sel.", "Ajoute l'œuf puis le lait peu à peu en fouettant.", "Laisse reposer la pâte 10 min.", "Cuis de petites louches de pâte 1 à 2 min par face dans une poêle chaude légèrement huilée."]},
+ {"cat": "Petit déjeuner", "nom": "Pain perdu", "kcal": 340, "portions": 1, "t": "10 min", "ing": ["2 tranches de pain rassis", "1 œuf", "100 ml de lait", "1 c. à café de sucre", "1 noisette de beurre", "cannelle"], "etapes": ["Bats l'œuf avec le lait, le sucre et la cannelle.", "Trempe les tranches de pain 1 min de chaque côté.", "Fais fondre le beurre dans une poêle.", "Dore le pain 2 à 3 min par face, jusqu'à ce qu'il soit doré."]},
+ {"cat": "Petit déjeuner", "nom": "Smoothie bowl mangue", "kcal": 300, "portions": 1, "t": "5 min", "ing": ["1 mangue congelée", "1 banane", "100 g de yaourt", "granola", "quelques fruits rouges"], "etapes": ["Mixe la mangue, la banane et le yaourt jusqu'à une texture épaisse.", "Verse dans un bol.", "Garnis de granola et de fruits rouges."]},
+ {"cat": "Petit déjeuner", "nom": "Tartines avocat-œuf", "kcal": 360, "portions": 1, "t": "10 min", "ing": ["1 tranche de pain complet", "½ avocat", "1 œuf", "jus de citron", "sel, poivre, piment"], "etapes": ["Fais cuire l'œuf au plat ou poché.", "Écrase l'avocat avec le citron, le sel et le poivre.", "Toaste le pain et étale l'avocat.", "Dépose l'œuf dessus et saupoudre d'un peu de piment."]},
+ {"cat": "Petit déjeuner", "nom": "Omelette aux champignons", "kcal": 300, "portions": 1, "t": "12 min", "ing": ["2 œufs", "100 g de champignons", "1 c. à café d'huile", "persil", "sel, poivre"], "etapes": ["Émince les champignons et fais-les revenir 5 min à l'huile.", "Bats les œufs avec sel et poivre.", "Verse les œufs sur les champignons.", "Cuis 3 min, replie l'omelette et parsème de persil."]},
+ {"cat": "Petit déjeuner", "nom": "Chia pudding coco", "kcal": 270, "portions": 1, "t": "5 min + repos", "ing": ["3 c. à soupe de graines de chia", "200 ml de lait de coco léger", "1 c. à café de miel", "fruits frais"], "etapes": ["Mélange les graines de chia, le lait et le miel.", "Remue bien puis laisse reposer 10 min et remue à nouveau.", "Place au frais au moins 2 h (idéalement une nuit).", "Sers avec des fruits frais par-dessus."]},
+ {"cat": "Petit déjeuner", "nom": "Granola maison & yaourt", "kcal": 350, "portions": 1, "t": "5 min", "ing": ["40 g de granola", "150 g de yaourt nature", "1 poignée de fruits rouges", "1 c. à café de miel"], "etapes": ["Verse le yaourt dans un bol.", "Ajoute le granola.", "Dépose les fruits rouges.", "Termine par un filet de miel."]},
+ {"cat": "Déjeuner", "nom": "Salade César au poulet", "kcal": 480, "portions": 1, "t": "15 min", "ing": ["100 g de poulet cuit", "1 cœur de laitue romaine", "20 g de parmesan", "2 c. à soupe de sauce César", "quelques croûtons"], "etapes": ["Coupe la salade en lanières.", "Tranche le poulet.", "Mélange salade, poulet et sauce.", "Ajoute le parmesan en copeaux et les croûtons."]},
+ {"cat": "Déjeuner", "nom": "Poke bowl saumon", "kcal": 540, "portions": 1, "t": "20 min", "ing": ["120 g de saumon cru très frais", "80 g de riz (cru)", "½ avocat", "1 carotte", "edamame", "sauce soja"], "etapes": ["Cuis le riz et laisse-le tiédir.", "Coupe le saumon en cubes et arrose-le d'un peu de sauce soja.", "Dresse le riz dans un bol.", "Dispose saumon, avocat, carotte râpée et edamame.", "Arrose du reste de sauce soja."]},
+ {"cat": "Déjeuner", "nom": "Chili sin carne", "kcal": 420, "portions": 2, "t": "30 min", "ing": ["250 g de haricots rouges cuits", "200 g de tomates concassées", "1 poivron", "1 oignon", "1 c. à café de cumin", "1 c. à café de paprika", "80 g de riz (cru)"], "etapes": ["Cuis le riz.", "Fais revenir l'oignon et le poivron en dés 5 min.", "Ajoute les épices, les tomates et les haricots.", "Laisse mijoter 15 min.", "Sers sur le riz."]},
+ {"cat": "Déjeuner", "nom": "Tortilla espagnole", "kcal": 400, "portions": 2, "t": "25 min", "ing": ["4 œufs", "2 pommes de terre", "1 oignon", "2 c. à soupe d'huile d'olive", "sel, poivre"], "etapes": ["Coupe les pommes de terre et l'oignon en fines tranches.", "Fais-les cuire doucement à l'huile 12 min.", "Bats les œufs, ajoute les pommes de terre.", "Verse dans la poêle et cuis 5 min à feu doux.", "Retourne à l'aide d'une assiette et cuis encore 4 min."]},
+ {"cat": "Déjeuner", "nom": "Salade lentilles-feta", "kcal": 430, "portions": 1, "t": "10 min", "ing": ["150 g de lentilles cuites", "40 g de feta", "1 tomate", "½ oignon rouge", "persil", "1 c. à soupe d'huile d'olive, vinaigre"], "etapes": ["Mélange les lentilles, la tomate en dés et l'oignon émincé.", "Émiette la feta par-dessus.", "Assaisonne d'huile, de vinaigre et de persil.", "Mélange délicatement."]},
+ {"cat": "Déjeuner", "nom": "Pâtes pesto & tomates cerises", "kcal": 520, "portions": 1, "t": "15 min", "ing": ["80 g de pâtes (crues)", "2 c. à soupe de pesto", "8 tomates cerises", "parmesan", "quelques pignons"], "etapes": ["Cuis les pâtes al dente.", "Coupe les tomates cerises en deux.", "Égoutte les pâtes et mélange-les au pesto.", "Ajoute les tomates, le parmesan et les pignons."]},
+ {"cat": "Déjeuner", "nom": "Riz sauté légumes & œuf", "kcal": 450, "portions": 1, "t": "15 min", "ing": ["150 g de riz cuit", "1 œuf", "100 g de légumes (petits pois, carotte, maïs)", "1 c. à soupe de sauce soja", "1 c. à café d'huile"], "etapes": ["Fais sauter les légumes à l'huile 4 min.", "Pousse-les sur le côté, casse l'œuf et brouille-le.", "Ajoute le riz et la sauce soja.", "Fais sauter le tout 3 min à feu vif."]},
+ {"cat": "Déjeuner", "nom": "Croque-monsieur léger", "kcal": 420, "portions": 1, "t": "12 min", "ing": ["2 tranches de pain complet", "1 tranche de jambon", "30 g d'emmental râpé", "2 c. à soupe de fromage blanc", "muscade"], "etapes": ["Étale le fromage blanc sur le pain.", "Ajoute le jambon et la moitié du fromage.", "Referme, parsème du reste de fromage et de muscade.", "Passe au four 8 min à 200 °C, jusqu'à gratiner."]},
+ {"cat": "Dîner", "nom": "Curry de légumes au lait de coco", "kcal": 380, "portions": 2, "t": "30 min", "ing": ["1 courgette", "1 poivron", "1 carotte", "200 ml de lait de coco", "1 oignon", "1 c. à soupe de pâte de curry", "100 g de riz (cru)"], "etapes": ["Cuis le riz.", "Fais revenir l'oignon 3 min.", "Ajoute les légumes en morceaux et la pâte de curry.", "Verse le lait de coco et laisse mijoter 15 min.", "Sers avec le riz."]},
+ {"cat": "Dîner", "nom": "Saumon teriyaki & riz", "kcal": 520, "portions": 1, "t": "20 min", "ing": ["130 g de pavé de saumon", "2 c. à soupe de sauce soja", "1 c. à café de miel", "80 g de riz (cru)", "graines de sésame"], "etapes": ["Cuis le riz.", "Mélange sauce soja et miel.", "Saisis le saumon 3 min par face.", "Verse la sauce, laisse caraméliser 2 min.", "Sers sur le riz, parsème de sésame."]},
+ {"cat": "Dîner", "nom": "Gratin de courgettes", "kcal": 300, "portions": 2, "t": "35 min", "ing": ["3 courgettes", "2 œufs", "100 ml de crème légère", "50 g d'emmental", "sel, poivre, muscade"], "etapes": ["Préchauffe le four à 200 °C.", "Coupe les courgettes en rondelles et fais-les revenir 8 min.", "Bats les œufs avec la crème, sel, poivre et muscade.", "Dispose les courgettes dans un plat, verse l'appareil et le fromage.", "Enfourne 20 min."]},
+ {"cat": "Dîner", "nom": "Soupe de potiron", "kcal": 220, "portions": 2, "t": "30 min", "ing": ["600 g de potiron", "1 pomme de terre", "1 oignon", "200 ml de lait", "sel, poivre, muscade"], "etapes": ["Coupe le potiron et la pomme de terre en cubes.", "Fais revenir l'oignon 3 min puis ajoute les légumes.", "Couvre d'eau et laisse cuire 20 min.", "Mixe avec le lait, sale, poivre et muscade."]},
+ {"cat": "Dîner", "nom": "Chili con carne", "kcal": 480, "portions": 2, "t": "35 min", "ing": ["250 g de bœuf haché", "250 g de haricots rouges cuits", "200 g de tomates concassées", "1 oignon", "1 c. à café de cumin", "piment, paprika", "80 g de riz (cru)"], "etapes": ["Cuis le riz.", "Fais dorer l'oignon et la viande.", "Ajoute les épices, les tomates et les haricots.", "Laisse mijoter 20 min à feu doux.", "Sers sur le riz."]},
+ {"cat": "Dîner", "nom": "Boulettes de bœuf, sauce tomate", "kcal": 450, "portions": 2, "t": "30 min", "ing": ["250 g de bœuf haché", "1 œuf", "2 c. à soupe de chapelure", "400 g de tomates concassées", "1 oignon", "herbes de Provence"], "etapes": ["Mélange la viande, l'œuf et la chapelure, forme des boulettes.", "Dore-les 5 min dans une poêle.", "Ajoute l'oignon émincé, les tomates et les herbes.", "Laisse mijoter 15 min à couvert."]},
+ {"cat": "Dîner", "nom": "Risotto aux champignons", "kcal": 480, "portions": 2, "t": "30 min", "ing": ["160 g de riz arborio", "200 g de champignons", "1 oignon", "100 ml de vin blanc", "1 litre de bouillon", "parmesan"], "etapes": ["Fais revenir l'oignon et les champignons 5 min.", "Ajoute le riz et nacre-le 2 min.", "Déglace au vin blanc.", "Ajoute le bouillon louche par louche en remuant 18 min.", "Hors du feu, incorpore le parmesan."]},
+ {"cat": "Dîner", "nom": "Papillote de poisson aux légumes", "kcal": 320, "portions": 1, "t": "25 min", "ing": ["150 g de filet de poisson blanc", "1 courgette", "1 tomate", "½ citron", "1 c. à café d'huile d'olive", "herbes"], "etapes": ["Préchauffe le four à 200 °C.", "Dépose le poisson et les légumes en rondelles sur une feuille de papier cuisson.", "Arrose d'huile, de citron et d'herbes.", "Referme la papillote et enfourne 18 min."]},
+ {"cat": "Dîner", "nom": "Velouté de brocoli", "kcal": 200, "portions": 2, "t": "25 min", "ing": ["1 brocoli", "1 pomme de terre", "1 oignon", "100 ml de crème légère", "sel, poivre"], "etapes": ["Coupe le brocoli et la pomme de terre.", "Fais revenir l'oignon 3 min, ajoute les légumes.", "Couvre d'eau et cuis 18 min.", "Mixe avec la crème, sale et poivre."]},
+ {"cat": "Dîner", "nom": "Poêlée de gnocchi aux légumes", "kcal": 430, "portions": 1, "t": "15 min", "ing": ["200 g de gnocchi", "100 g d'épinards", "6 tomates cerises", "1 c. à soupe de pesto", "parmesan"], "etapes": ["Poêle les gnocchi 5 min jusqu'à ce qu'ils dorent.", "Ajoute les tomates cerises et les épinards.", "Laisse cuire 3 min.", "Hors du feu, mélange le pesto et le parmesan."]},
+ {"cat": "En-cas", "nom": "Energy balls dattes-cacao", "kcal": 180, "portions": 2, "t": "10 min", "ing": ["6 dattes dénoyautées", "30 g d'amandes", "1 c. à soupe de cacao", "1 c. à soupe de flocons d'avoine"], "etapes": ["Mixe les dattes et les amandes.", "Ajoute le cacao et les flocons.", "Forme de petites boules avec les mains.", "Place au frais 30 min."]},
+ {"cat": "En-cas", "nom": "Pita & houmous", "kcal": 250, "portions": 1, "t": "5 min", "ing": ["1 pain pita", "3 c. à soupe de houmous", "quelques crudités"], "etapes": ["Toaste légèrement le pita.", "Coupe-le en triangles.", "Sers avec le houmous et des crudités."]},
+ {"cat": "En-cas", "nom": "Smoothie banane-épinards", "kcal": 190, "portions": 1, "t": "5 min", "ing": ["1 banane", "1 poignée d'épinards", "150 ml de lait d'amande", "1 c. à soupe de beurre de cacahuète"], "etapes": ["Place tous les ingrédients dans un blender.", "Mixe jusqu'à obtenir une texture lisse.", "Sers aussitôt."]},
+ {"cat": "En-cas", "nom": "Toast cottage & concombre", "kcal": 160, "portions": 1, "t": "5 min", "ing": ["1 tranche de pain complet", "3 c. à soupe de cottage cheese", "¼ de concombre", "aneth, poivre"], "etapes": ["Toaste le pain.", "Étale le cottage cheese.", "Dispose le concombre en fines tranches.", "Parsème d'aneth et de poivre."]},
+ {"cat": "En-cas", "nom": "Mix oléagineux maison", "kcal": 210, "portions": 1, "t": "2 min", "ing": ["15 g d'amandes", "15 g de noix de cajou", "10 g de raisins secs", "quelques graines de courge"], "etapes": ["Mélange tous les ingrédients dans un petit bol.", "Conserve le reste dans un bocal pour plus tard."]},
+ {"cat": "En-cas", "nom": "Compote & flocons", "kcal": 150, "portions": 1, "t": "3 min", "ing": ["1 gourde de compote sans sucre", "2 c. à soupe de flocons d'avoine", "cannelle"], "etapes": ["Verse la compote dans un bol.", "Ajoute les flocons d'avoine.", "Saupoudre de cannelle."]},
+ {"cat": "Dessert", "nom": "Mousse au chocolat", "kcal": 250, "portions": 4, "t": "15 min + repos", "ing": ["100 g de chocolat noir", "3 œufs", "1 pincée de sel"], "etapes": ["Fais fondre le chocolat au bain-marie.", "Sépare les blancs des jaunes.", "Incorpore les jaunes au chocolat tiède.", "Monte les blancs en neige avec le sel.", "Incorpore-les délicatement, puis réfrigère 3 h."]},
+ {"cat": "Dessert", "nom": "Crumble aux pommes", "kcal": 320, "portions": 4, "t": "35 min", "ing": ["4 pommes", "80 g de farine", "60 g de beurre", "50 g de sucre", "cannelle"], "etapes": ["Préchauffe le four à 180 °C.", "Coupe les pommes en dés et dépose-les dans un plat.", "Mélange du bout des doigts farine, beurre et sucre en sable grossier.", "Couvre les pommes de ce crumble.", "Enfourne 25 min jusqu'à ce que ce soit doré."]},
+ {"cat": "Dessert", "nom": "Banana bread", "kcal": 280, "portions": 8, "t": "55 min", "ing": ["3 bananes mûres", "2 œufs", "200 g de farine", "80 g de sucre", "60 g de beurre fondu", "1 sachet de levure"], "etapes": ["Préchauffe le four à 180 °C.", "Écrase les bananes, ajoute les œufs, le sucre et le beurre.", "Incorpore la farine et la levure.", "Verse dans un moule à cake.", "Enfourne 45 min ; vérifie la cuisson avec la lame d'un couteau."]},
+ {"cat": "Dessert", "nom": "Salade de fruits", "kcal": 120, "portions": 2, "t": "10 min", "ing": ["1 pomme", "1 orange", "1 banane", "quelques fruits rouges", "jus de citron", "menthe"], "etapes": ["Coupe tous les fruits en morceaux.", "Mélange-les dans un saladier.", "Arrose de jus de citron.", "Décore de quelques feuilles de menthe."]},
+ {"cat": "Dessert", "nom": "Riz au lait vanille", "kcal": 220, "portions": 4, "t": "35 min", "ing": ["100 g de riz rond", "500 ml de lait", "40 g de sucre", "1 gousse de vanille"], "etapes": ["Porte le lait à frémissement avec la vanille fendue.", "Ajoute le riz et laisse cuire 25 min à feu doux en remuant.", "Incorpore le sucre en fin de cuisson.", "Sers tiède ou frais."]},
+ {"cat": "Dessert", "nom": "Cookies flocons-pépites", "kcal": 150, "portions": 12, "t": "25 min", "ing": ["100 g de farine", "60 g de flocons d'avoine", "80 g de beurre mou", "70 g de sucre", "1 œuf", "60 g de pépites de chocolat"], "etapes": ["Préchauffe le four à 180 °C.", "Mélange le beurre et le sucre, ajoute l'œuf.", "Incorpore farine, flocons et pépites.", "Forme des petits tas espacés sur une plaque.", "Enfourne 12 min."]},
+ {"cat": "Dessert", "nom": "Yaourt glacé minute", "kcal": 140, "portions": 2, "t": "5 min", "ing": ["200 g de fruits rouges congelés", "150 g de yaourt grec", "1 c. à soupe de miel"], "etapes": ["Mixe les fruits congelés avec le yaourt et le miel.", "Arrête dès que la texture est crémeuse.", "Sers immédiatement."]},
+ {"cat": "Dessert", "nom": "Clafoutis aux cerises", "kcal": 230, "portions": 6, "t": "45 min", "ing": ["400 g de cerises", "3 œufs", "80 g de sucre", "100 g de farine", "250 ml de lait", "1 sachet de sucre vanillé"], "etapes": ["Préchauffe le four à 180 °C.", "Bats les œufs avec le sucre, ajoute la farine puis le lait.", "Dispose les cerises dans un plat beurré.", "Verse la pâte par-dessus.", "Enfourne 35 min."]},
+ {"cat": "Petit déjeuner", "nom": "Bircher muesli", "kcal": 320, "portions": 1, "t": "5 min + repos", "ing": ["50 g de flocons d'avoine", "120 ml de lait", "1 yaourt nature", "½ pomme râpée", "quelques noisettes", "miel"], "etapes": ["Mélange flocons, lait et yaourt.", "Ajoute la pomme râpée.", "Laisse reposer une nuit au frais.", "Au matin, ajoute noisettes et miel."]},
+ {"cat": "Petit déjeuner", "nom": "Œuf à la coque & mouillettes", "kcal": 260, "portions": 1, "t": "8 min", "ing": ["2 œufs", "1 tranche de pain complet", "beurre", "sel"], "etapes": ["Plonge les œufs dans l'eau bouillante 3 min.", "Toaste le pain et beurre-le.", "Coupe-le en mouillettes.", "Ouvre l'œuf et trempe les mouillettes."]},
+ {"cat": "Petit déjeuner", "nom": "Tartine ricotta-figue", "kcal": 300, "portions": 1, "t": "5 min", "ing": ["1 tranche de pain complet", "3 c. à soupe de ricotta", "1 figue", "miel", "quelques noix"], "etapes": ["Toaste le pain.", "Étale la ricotta.", "Dispose la figue en tranches.", "Ajoute les noix concassées et un filet de miel."]},
+ {"cat": "Petit déjeuner", "nom": "Mug cake banane", "kcal": 280, "portions": 1, "t": "5 min", "ing": ["1 banane", "1 œuf", "3 c. à soupe de flocons d'avoine", "1 c. à café de cacao", "levure"], "etapes": ["Écrase la banane et mélange tous les ingrédients.", "Verse dans un mug.", "Cuis 2 min au micro-ondes.", "Laisse tiédir avant de déguster."]},
+ {"cat": "Petit déjeuner", "nom": "Smoothie vert", "kcal": 210, "portions": 1, "t": "5 min", "ing": ["1 banane", "1 poignée d'épinards", "½ pomme", "200 ml d'eau de coco", "jus de citron"], "etapes": ["Place tous les ingrédients dans un blender.", "Mixe jusqu'à obtenir une texture lisse.", "Sers frais."]},
+ {"cat": "Petit déjeuner", "nom": "Crêpes protéinées", "kcal": 330, "portions": 1, "t": "12 min", "ing": ["1 banane", "2 œufs", "40 g de flocons d'avoine", "cannelle", "1 c. à café d'huile"], "etapes": ["Mixe banane, œufs, flocons et cannelle.", "Chauffe une poêle huilée.", "Cuis de petites crêpes 1 à 2 min par face.", "Sers avec des fruits."]},
+ {"cat": "Petit déjeuner", "nom": "Avocado toast au saumon", "kcal": 360, "portions": 1, "t": "8 min", "ing": ["1 tranche de pain complet", "½ avocat", "1 tranche de saumon fumé", "jus de citron", "poivre, aneth"], "etapes": ["Toaste le pain.", "Écrase l'avocat avec citron et poivre, étale-le.", "Dépose le saumon fumé.", "Parsème d'aneth."]},
+ {"cat": "Déjeuner", "nom": "Salade de pâtes pesto", "kcal": 470, "portions": 1, "t": "15 min", "ing": ["80 g de pâtes (crues)", "2 c. à soupe de pesto", "8 tomates cerises", "30 g de mozzarella", "roquette", "pignons"], "etapes": ["Cuis les pâtes, rafraîchis-les.", "Mélange-les au pesto.", "Ajoute tomates cerises, mozzarella et roquette.", "Parsème de pignons."]},
+ {"cat": "Déjeuner", "nom": "Bowl de riz au thon", "kcal": 480, "portions": 1, "t": "15 min", "ing": ["80 g de riz (cru)", "1 boîte de thon au naturel", "½ avocat", "1 carotte", "sauce soja", "graines de sésame"], "etapes": ["Cuis le riz.", "Dresse-le dans un bol.", "Dispose thon, avocat et carotte râpée.", "Arrose de sauce soja et de sésame."]},
+ {"cat": "Déjeuner", "nom": "Soupe miso & nouilles", "kcal": 350, "portions": 1, "t": "12 min", "ing": ["1 c. à soupe de pâte miso", "60 g de nouilles", "100 g de tofu", "1 oignon vert", "champignons"], "etapes": ["Fais chauffer 400 ml d'eau.", "Délaye le miso hors ébullition.", "Ajoute nouilles, tofu en dés et champignons, cuis 5 min.", "Parsème d'oignon vert."]},
+ {"cat": "Déjeuner", "nom": "Galette de sarrasin complète", "kcal": 420, "portions": 1, "t": "12 min", "ing": ["1 galette de sarrasin", "1 tranche de jambon", "1 œuf", "30 g d'emmental"], "etapes": ["Chauffe la galette dans une poêle.", "Casse l'œuf au centre.", "Ajoute jambon et fromage.", "Replie les bords et sers chaud."]},
+ {"cat": "Déjeuner", "nom": "Salade grecque", "kcal": 380, "portions": 1, "t": "10 min", "ing": ["1 tomate", "½ concombre", "½ oignon rouge", "60 g de feta", "olives", "huile d'olive, origan"], "etapes": ["Coupe tomate, concombre et oignon.", "Ajoute la feta en cubes et les olives.", "Arrose d'huile d'olive.", "Saupoudre d'origan."]},
+ {"cat": "Déjeuner", "nom": "Curry de lentilles corail", "kcal": 440, "portions": 2, "t": "25 min", "ing": ["150 g de lentilles corail", "200 ml de lait de coco", "1 oignon", "1 c. à soupe de curry", "100 g de riz (cru)"], "etapes": ["Cuis le riz.", "Fais revenir l'oignon, ajoute le curry.", "Ajoute lentilles, lait de coco et 200 ml d'eau.", "Laisse mijoter 15 min, sers avec le riz."]},
+ {"cat": "Déjeuner", "nom": "Quiche sans pâte courgette", "kcal": 300, "portions": 2, "t": "35 min", "ing": ["2 courgettes", "3 œufs", "100 ml de lait", "50 g de gruyère", "sel, poivre"], "etapes": ["Préchauffe à 180 °C.", "Râpe les courgettes, presse-les.", "Bats œufs, lait, fromage, sel et poivre.", "Ajoute les courgettes, verse dans un moule, enfourne 25 min."]},
+ {"cat": "Déjeuner", "nom": "Bowl riz & haricots noirs", "kcal": 460, "portions": 1, "t": "15 min", "ing": ["80 g de riz (cru)", "120 g de haricots noirs", "½ avocat", "maïs", "coriandre", "jus de citron vert"], "etapes": ["Cuis le riz.", "Réchauffe les haricots.", "Dresse riz, haricots, avocat et maïs.", "Ajoute coriandre et citron vert."]},
+ {"cat": "Déjeuner", "nom": "Sandwich poulet-crudités", "kcal": 430, "portions": 1, "t": "10 min", "ing": ["1 petit pain", "80 g de poulet cuit", "salade", "tomate", "1 c. à soupe de fromage frais"], "etapes": ["Coupe le pain en deux et tartine de fromage frais.", "Garnis de salade et tomate.", "Ajoute le poulet.", "Referme et presse légèrement."]},
+ {"cat": "Dîner", "nom": "Minestrone", "kcal": 280, "portions": 2, "t": "35 min", "ing": ["1 carotte", "1 courgette", "1 pomme de terre", "100 g de haricots blancs", "50 g de pâtes", "400 g de tomates concassées"], "etapes": ["Coupe tous les légumes en dés.", "Fais-les revenir 5 min.", "Ajoute tomates et 700 ml d'eau, cuis 15 min.", "Ajoute pâtes et haricots, cuis 10 min."]},
+ {"cat": "Dîner", "nom": "Poulet citron & légumes rôtis", "kcal": 480, "portions": 2, "t": "40 min", "ing": ["2 filets de poulet", "2 carottes", "1 courgette", "1 citron", "huile d'olive, thym"], "etapes": ["Préchauffe à 200 °C.", "Coupe les légumes, dispose-les avec le poulet.", "Arrose d'huile, de jus de citron et de thym.", "Enfourne 30 min."]},
+ {"cat": "Dîner", "nom": "Pâtes courgettes-ricotta", "kcal": 450, "portions": 1, "t": "20 min", "ing": ["80 g de pâtes (crues)", "1 courgette", "60 g de ricotta", "parmesan", "menthe ou basilic"], "etapes": ["Cuis les pâtes.", "Poêle la courgette en rondelles 6 min.", "Mélange pâtes, courgette et ricotta.", "Ajoute parmesan et herbes."]},
+ {"cat": "Dîner", "nom": "Omelette aux légumes", "kcal": 320, "portions": 1, "t": "12 min", "ing": ["3 œufs", "½ poivron", "quelques champignons", "1 tomate", "herbes", "1 c. à café d'huile"], "etapes": ["Poêle les légumes en dés 5 min.", "Bats les œufs et verse-les.", "Cuis 3 min à feu doux.", "Replie et parsème d'herbes."]},
+ {"cat": "Dîner", "nom": "Poêlée patate douce & pois chiches", "kcal": 420, "portions": 1, "t": "25 min", "ing": ["1 patate douce", "120 g de pois chiches", "1 oignon", "cumin, paprika", "1 c. à soupe d'huile d'olive"], "etapes": ["Coupe la patate douce en cubes.", "Fais-la sauter 12 min avec l'oignon.", "Ajoute pois chiches et épices.", "Poursuis 6 min jusqu'à coloration."]},
+ {"cat": "Dîner", "nom": "Saumon en croûte d'herbes", "kcal": 380, "portions": 1, "t": "20 min", "ing": ["130 g de pavé de saumon", "1 c. à soupe de chapelure", "persil, aneth", "½ citron", "1 c. à café d'huile"], "etapes": ["Préchauffe à 200 °C.", "Mélange chapelure, herbes et huile.", "Dépose ce mélange sur le saumon.", "Enfourne 12 min, sers avec le citron."]},
+ {"cat": "Dîner", "nom": "Gratin de chou-fleur", "kcal": 300, "portions": 2, "t": "35 min", "ing": ["1 chou-fleur", "200 ml de lait", "1 c. à soupe de farine", "50 g de gruyère", "muscade"], "etapes": ["Cuis le chou-fleur 12 min à la vapeur.", "Prépare une béchamel légère lait-farine.", "Mélange chou-fleur et béchamel dans un plat.", "Couvre de fromage et gratine 15 min à 200 °C."]},
+ {"cat": "Dîner", "nom": "Wok de crevettes & légumes", "kcal": 340, "portions": 1, "t": "15 min", "ing": ["120 g de crevettes", "1 poivron", "100 g de brocoli", "1 c. à soupe de sauce soja", "gingembre, ail"], "etapes": ["Fais sauter ail et gingembre 1 min.", "Ajoute les légumes, cuis 5 min à feu vif.", "Ajoute les crevettes 3 min.", "Déglace à la sauce soja."]},
+ {"cat": "Dîner", "nom": "Soupe thaï au lait de coco", "kcal": 360, "portions": 2, "t": "25 min", "ing": ["150 g de poulet", "200 ml de lait de coco", "100 g de champignons", "1 c. à soupe de pâte de curry", "citronnelle, coriandre"], "etapes": ["Fais revenir la pâte de curry 1 min.", "Ajoute le lait de coco et 300 ml d'eau.", "Ajoute poulet et champignons, mijote 12 min.", "Termine par la coriandre."]},
+ {"cat": "En-cas", "nom": "Banane & chocolat noir", "kcal": 160, "portions": 1, "t": "2 min", "ing": ["1 banane", "2 carrés de chocolat noir"], "etapes": ["Coupe la banane.", "Déguste avec les carrés de chocolat."]},
+ {"cat": "En-cas", "nom": "Skyr & myrtilles", "kcal": 170, "portions": 1, "t": "2 min", "ing": ["150 g de skyr", "80 g de myrtilles", "1 c. à café de miel"], "etapes": ["Verse le skyr dans un bol.", "Ajoute les myrtilles.", "Termine par un filet de miel."]},
+ {"cat": "En-cas", "nom": "Galette de riz & purée d'amande", "kcal": 150, "portions": 1, "t": "2 min", "ing": ["2 galettes de riz", "1 c. à soupe de purée d'amande", "½ banane"], "etapes": ["Étale la purée d'amande sur les galettes.", "Ajoute des rondelles de banane."]},
+ {"cat": "En-cas", "nom": "Œuf dur & tomates cerises", "kcal": 140, "portions": 1, "t": "10 min", "ing": ["1 œuf", "6 tomates cerises", "sel, poivre"], "etapes": ["Cuis l'œuf 9 min dans l'eau bouillante.", "Écale-le et coupe-le en deux.", "Sers avec les tomates cerises, sel et poivre."]},
+ {"cat": "En-cas", "nom": "Houmous & crackers", "kcal": 200, "portions": 1, "t": "3 min", "ing": ["3 c. à soupe de houmous", "4 crackers complets", "quelques crudités"], "etapes": ["Dépose le houmous dans un bol.", "Sers avec les crackers et les crudités."]},
+ {"cat": "En-cas", "nom": "Smoothie fraise-banane", "kcal": 180, "portions": 1, "t": "5 min", "ing": ["100 g de fraises", "½ banane", "150 ml de lait", "quelques glaçons"], "etapes": ["Place tous les ingrédients dans un blender.", "Mixe jusqu'à une texture onctueuse.", "Sers aussitôt."]},
+ {"cat": "En-cas", "nom": "Barres d'avoine maison", "kcal": 190, "portions": 2, "t": "20 min", "ing": ["80 g de flocons d'avoine", "1 banane écrasée", "1 c. à soupe de miel", "30 g de pépites de chocolat"], "etapes": ["Préchauffe à 180 °C.", "Mélange tous les ingrédients.", "Étale en rectangle sur une plaque.", "Enfourne 15 min, laisse refroidir et coupe en barres."]},
+ {"cat": "Dessert", "nom": "Tiramisu express", "kcal": 320, "portions": 4, "t": "15 min + repos", "ing": ["250 g de mascarpone", "2 œufs", "60 g de sucre", "12 biscuits à la cuillère", "café fort", "cacao"], "etapes": ["Sépare les blancs des jaunes.", "Bats jaunes et sucre, ajoute le mascarpone.", "Incorpore les blancs montés en neige.", "Trempe les biscuits dans le café, alterne avec la crème, saupoudre de cacao et réfrigère 4 h."]},
+ {"cat": "Dessert", "nom": "Pommes au four", "kcal": 160, "portions": 2, "t": "35 min", "ing": ["2 pommes", "1 c. à soupe de miel", "cannelle", "quelques noix"], "etapes": ["Préchauffe à 180 °C.", "Évide les pommes.", "Garnis de miel, cannelle et noix.", "Enfourne 30 min."]},
+ {"cat": "Dessert", "nom": "Panna cotta", "kcal": 250, "portions": 4, "t": "15 min + repos", "ing": ["400 ml de crème", "60 g de sucre", "2 feuilles de gélatine", "1 gousse de vanille", "coulis de fruits"], "etapes": ["Fais ramollir la gélatine dans l'eau froide.", "Chauffe crème, sucre et vanille sans bouillir.", "Hors du feu, incorpore la gélatine essorée.", "Verse en verrines, réfrigère 4 h, nappe de coulis."]},
+ {"cat": "Dessert", "nom": "Fondant au chocolat", "kcal": 340, "portions": 4, "t": "25 min", "ing": ["120 g de chocolat noir", "80 g de beurre", "80 g de sucre", "2 œufs", "40 g de farine"], "etapes": ["Préchauffe à 200 °C.", "Fais fondre chocolat et beurre.", "Ajoute sucre, œufs puis farine.", "Verse en ramequins et enfourne 10 min."]},
+ {"cat": "Dessert", "nom": "Crêpes sucrées", "kcal": 200, "portions": 4, "t": "20 min", "ing": ["250 g de farine", "2 œufs", "500 ml de lait", "1 c. à soupe de sucre", "1 pincée de sel"], "etapes": ["Mélange farine, sucre et sel.", "Ajoute les œufs puis le lait petit à petit.", "Laisse reposer 30 min.", "Cuis de fines crêpes 1 min par face."]},
+ {"cat": "Dessert", "nom": "Gâteau au yaourt", "kcal": 280, "portions": 8, "t": "45 min", "ing": ["1 yaourt nature", "2 pots de farine", "1 pot de sucre", "½ pot d'huile", "3 œufs", "1 sachet de levure"], "etapes": ["Préchauffe à 180 °C.", "Mélange tous les ingrédients (le pot de yaourt sert de mesure).", "Verse dans un moule.", "Enfourne 30 min."]},
+ {"cat": "Dessert", "nom": "Verrine fromage blanc-fruits rouges", "kcal": 150, "portions": 2, "t": "5 min", "ing": ["200 g de fromage blanc", "100 g de fruits rouges", "1 c. à soupe de miel", "quelques biscuits émiettés"], "etapes": ["Mélange fromage blanc et miel.", "Alterne en verrines avec les fruits rouges.", "Termine par des biscuits émiettés."]},
+ {"cat": "Dessert", "nom": "Tarte aux fraises", "kcal": 260, "portions": 6, "t": "40 min", "ing": ["1 pâte sablée", "250 g de fraises", "crème pâtissière", "1 c. à soupe de confiture"], "etapes": ["Cuis la pâte à blanc 15 min à 180 °C.", "Laisse refroidir, garnis de crème pâtissière.", "Dispose les fraises coupées.", "Lustre avec la confiture tiédie."]}
+];
+
+const REPAS=[{key:"petit-dej",label:"Petit déjeuner",emo:"☕"},{key:"dejeuner",label:"Déjeuner",emo:"🍽️"},{key:"diner",label:"Dîner",emo:"🌙"},{key:"collation",label:"Collation",emo:"🍎"},{key:"grignotage",label:"Grignotage",emo:"✨"}];
+const POSTURES=["Assis","Debout","En marchant","Allongé","En voiture"];
+const LIEUX=["Maison","Travail","Restaurant","Extérieur","Chez des proches","Transports"];
+const MOODS=[{v:"Bien",e:"🙂"},{v:"Moyen",e:"😐"},{v:"Pas bien",e:"🙁"}];
+
+/* État + migration */
+let foods=LS.get('foods',null);
+if(!foods){ foods=SEED_FOODS.map(f=>({id:uid(),nom:f[0],kcal:f[1],prot:f[2],gluc:f[3],lip:f[4],cat:f[5],unite:f[6]||null,gUnite:f[7]||null,src:'base'})); LS.set('foods',foods); }
+else{ let ch=false; foods.forEach(f=>{ if(f.unite===undefined){ const u=UNIT_BY_NAME[f.nom]; f.unite=u?u.unite:null; f.gUnite=u?u.gUnite:null; ch=true; } });
+  const present=new Set(foods.map(f=>f.nom));
+  SEED_FOODS.forEach(f=>{ if(!present.has(f[0])){ foods.push({id:uid(),nom:f[0],kcal:f[1],prot:f[2],gluc:f[3],lip:f[4],cat:f[5],unite:f[6]||null,gUnite:f[7]||null,src:'base'}); ch=true; } });
+  if(ch)LS.set('foods',foods); }
+let entries=LS.get('entries',[]);
+let weights=LS.get('weights',[]);
+let profile=LS.get('profile',{sexe:'F',age:'',taille:'',poids:'',activite:'1.55',objectif:'-500'});
+let userRecipes=LS.get('recipes',[]);
+const saveRecipes=()=>LS.set('recipes',userRecipes);
+const allRecipes=()=>SEED_RECIPES.concat(userRecipes);
+let curDate=todayISO();
+const saveFoods=()=>LS.set('foods',foods), saveEntries=()=>LS.set('entries',entries), saveWeights=()=>LS.set('weights',weights), saveProfile=()=>LS.set('profile',profile);
+
+let toastT; function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+
+/* Verrou (code 1234, verrou doux) */
+const PIN_STORE='ccj_pincode';
+function setupLock(){
+  if(sessionStorage.getItem('ccj_unlocked')==='yes'){openApp();return;}
+  const inputs=$$('#pin input');
+  const msg=$('#lockMsg'),btn=$('#pinBtn'),err=$('#pinErr');
+  let mode=localStorage.getItem(PIN_STORE)?'unlock':'create',firstEntry=null;
+  function setMode(){
+    if(mode==='unlock'){msg.textContent='Saisis ton code pour ouvrir ton carnet.';btn.textContent='Ouvrir le carnet';}
+    else if(mode==='create'){msg.textContent='Bienvenue ! Choisis un code à 4 chiffres, rien qu\u2019à toi.';btn.textContent='Créer mon code';}
+    else{msg.textContent='Confirme ton code à 4 chiffres.';btn.textContent='Confirmer';}
+    err.textContent='';inputs.forEach(i=>i.value='');inputs[0].focus();
+  }
+  setMode();
+  function shake(){$('#pin').animate([{transform:'translateX(-7px)'},{transform:'translateX(7px)'},{transform:'translateX(0)'}],{duration:220});}
+  inputs.forEach((inp,i)=>{
+    inp.addEventListener('input',()=>{inp.value=inp.value.replace(/\D/g,'');if(inp.value&&i<3)inputs[i+1].focus();if(i===3&&inp.value)go();});
+    inp.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!inp.value&&i>0)inputs[i-1].focus();if(e.key==='Enter')go();});
+  });
+  btn.onclick=go;
+  function go(){
+    const code=inputs.map(i=>i.value).join('');
+    if(code.length<4){err.textContent='Entre les 4 chiffres.';return;}
+    if(mode==='unlock'){
+      if(code===localStorage.getItem(PIN_STORE)){sessionStorage.setItem('ccj_unlocked','yes');openApp();}
+      else{err.textContent='Code incorrect — réessaie.';inputs.forEach(i=>i.value='');inputs[0].focus();shake();}
+    }else if(mode==='create'){firstEntry=code;mode='confirm';setMode();}
+    else{
+      if(code===firstEntry){localStorage.setItem(PIN_STORE,code);sessionStorage.setItem('ccj_unlocked','yes');openApp();}
+      else{err.textContent='Les deux codes diffèrent — recommence.';mode='create';firstEntry=null;setMode();shake();}
+    }
+  }
+}
+function openApp(){$('#lock').classList.add('hide');$('#app').style.display='block';initApp();}
+
+const VIEW_SUB={journal:'journal du jour',recipes:'idées recettes',stats:'tes tendances',foods:"base d'aliments",profile:'à propos de toi'};
+let currentView='journal';
+function switchView(v,fromPop){
+  $$('.view').forEach(s=>s.classList.remove('active'));
+  $('#v-'+v).classList.add('active');
+  $$('.nav button[data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  $('#tbSub').textContent=VIEW_SUB[v]||'';
+  window.scrollTo({top:0,behavior:'instant'});
+  if(v==='stats')renderStats(); if(v==='foods')renderFoods(); if(v==='recipes')renderRecipes(); if(v==='profile')renderProfile();
+  if(!fromPop && v!==currentView && !(currentView==='journal'&&v==='journal')){
+    if(v!=='journal')history.pushState({view:v},''); else history.pushState({view:'journal'},'');
+  }
+  currentView=v;
+}
+/* Métabolisme — Mifflin-St Jeor */
+function metabolism(){
+  const w=parseFloat(profile.poids),h=parseFloat(profile.taille),a=parseFloat(profile.age);
+  const ok=w>0&&h>0&&a>0; let bmr=null,tdee=null,goal=null,imc=null;
+  if(ok){ bmr=10*w+6.25*h-5*a+(profile.sexe==='H'?5:-161); tdee=bmr*parseFloat(profile.activite||1.55); goal=tdee+parseFloat(profile.objectif||0); imc=w/Math.pow(h/100,2); }
+  return {ok,bmr,tdee,goal,imc};
+}
+const dailyTarget=()=>{const m=metabolism();return m.ok?round(m.goal):null;};
+
+const foodById=id=>foods.find(f=>f.id===id);
+function entryKcal(e){
+  if(e.isRecipe)return round((e.unitKcal||0)*(e.qte||0));
+  const f=foodById(e.foodId); if(!f)return e.kcalCache||0; return round(f.kcal*e.qte/100);
+}
+const fmtNb=n=>Number.isInteger(n)?String(n):String(n).replace('.',',');
+function entryQtyLabel(e){
+  if(e.isRecipe)return fmtNb(e.qte)+' portion'+(e.qte>1?'s':'');
+  if(e.unitMode==='piece'&&e.nUnit&&e.unitName){ const s=(e.nUnit>1&&!e.unitName.includes(' '))?'s':''; return fmtNb(e.nUnit)+' '+e.unitName+s; }
+  return fmtNb(e.qte)+' g';
+}
+const dayEntries=d=>entries.filter(e=>e.date===d);
+const dayTotal=d=>dayEntries(d).reduce((s,e)=>s+entryKcal(e),0);
+
+const JOURS=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+const MOIS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const frDate=iso=>{const d=new Date(iso+'T12:00');return `${JOURS[d.getDay()]} ${d.getDate()} ${MOIS[d.getMonth()]}`;};
+function relDay(iso){const a=new Date(iso+'T12:00'),b=new Date(todayISO()+'T12:00');const diff=Math.round((a-b)/86400000);
+  if(diff===0)return"Aujourd'hui";if(diff===-1)return"Hier";if(diff===1)return"Demain";return diff<0?`il y a ${-diff} jours`:`dans ${diff} jours`;}
+function shiftDay(n){const d=new Date(curDate+'T12:00');d.setDate(d.getDate()+n);curDate=d.toISOString().slice(0,10);renderJournal();}
+
+function drawRing(eaten,target){
+  const cv=$('#ringCanvas'),ctx=cv.getContext('2d'),dpr=window.devicePixelRatio||1,S=118;
+  cv.width=S*dpr;cv.height=S*dpr;cv.style.width=S+'px';cv.style.height=S+'px';ctx.scale(dpr,dpr);
+  const cx=S/2,cy=S/2,r=48,lw=11;ctx.clearRect(0,0,S,S);ctx.lineCap='round';
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle='#E4D5BA';ctx.lineWidth=lw;ctx.stroke();
+  const frac=target?Math.min(eaten/target,1):0,over=target&&eaten>target;
+  ctx.beginPath();ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*frac);
+  ctx.strokeStyle=over?'#C0883A':(target&&eaten>=target*0.98?'#6E7C56':'#7A1F2B');ctx.lineWidth=lw;ctx.stroke();
+  if(over){const of=Math.min((eaten-target)/target,1);ctx.beginPath();ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*of);ctx.strokeStyle='#9A3340';ctx.lineWidth=lw;ctx.stroke();}
+}
+
+function renderJournal(){
+  $('#dayLabel').textContent=frDate(curDate);
+  $('#dayRel').textContent=relDay(curDate);
+  const eaten=dayTotal(curDate),target=dailyTarget();
+  drawRing(eaten,target);
+  $('#ringMain').textContent=eaten;$('#ringSub').textContent=target?`/ ${target} kcal`:'kcal';
+  $('#balEaten').textContent=eaten+' kcal';
+  $('#balTarget').textContent=target?target+' kcal':'définir le profil';
+  const chip=$('#balChip');
+  if(target){const left=target-eaten;$('#balLeft').textContent=(left>=0?left:'+'+(-left))+' kcal';const diff=eaten-target;
+    if(Math.abs(diff)<=80){chip.className='chip-status neu';chip.innerHTML='◎ Pile dans l\'objectif';}
+    else if(diff<0){chip.className='chip-status def';chip.innerHTML=`▾ Déficit de ${-diff} kcal`;}
+    else{chip.className='chip-status sur';chip.innerHTML=`▴ Surplus de ${diff} kcal`;}
+  }else{$('#balLeft').textContent='—';chip.className='';chip.innerHTML='';}
+
+  const host=$('#mealsHost');host.innerHTML='';
+  const dayList=dayEntries(curDate);
+  if(!dayList.length){
+    host.innerHTML=`<div class="empty"><div class="big">❧</div><b>Rien pour l'instant</b>Appuie sur le bouton ＋ en bas pour ajouter un aliment et choisir le repas.</div>`;
+    return;
+  }
+  REPAS.forEach(r=>{
+    const list=dayList.filter(e=>e.repas===r.key); if(!list.length)return;
+    const sub=list.reduce((s,e)=>s+entryKcal(e),0);
+    const block=document.createElement('div');block.className='meal';
+    block.innerHTML=`<div class="head"><div class="t"><span class="emo">${r.emo}</span><b>${r.label}</b></div><span class="kc">${sub} kcal</span></div>`;
+    list.forEach(e=>{
+      const f=foodById(e.foodId),name=f?f.nom:(e.foodName||'Aliment');
+      const ctx=[]; if(e.faimAvant!=null)ctx.push('🤚'+e.faimAvant); if(e.lieu)ctx.push(e.lieu); if(e.posture)ctx.push(e.posture); if(e.ecran)ctx.push('📱'); if(e.humeur)ctx.push(e.humeur);
+      const row=document.createElement('div');row.className='entry';
+      row.innerHTML=`<div class="ebody"><div class="ename">${name}</div><div class="esub">${entryQtyLabel(e)}${ctx.length?' · '+ctx.join(' · '):''}</div></div><div class="ekc">${entryKcal(e)}</div>`;
+      row.onclick=()=>e.isRecipe?openRecipeEntryEdit(e):openEntrySheet(r.key,e);
+      block.appendChild(row);
+    });
+    host.appendChild(block);
+  });
+}
+function autoMeal(){const h=new Date().getHours();if(h<11)return'petit-dej';if(h<14)return'dejeuner';if(h>=18&&h<22)return'diner';return'collation';}
+function openRecipeEntryEdit(e){
+  let meal=e.repas,portions=e.qte;
+  const mealSeg=REPAS.map(r=>`<button data-v="${r.key}" class="${r.key===meal?'on':''}">${r.emo} ${r.label}</button>`).join('');
+  openSheet(`<h2>${e.foodName}</h2><div class="sub">Recette ajoutée à ton journal.</div>
+    <div class="field"><label>Repas</label><div class="seg" id="reMeal">${mealSeg}</div></div>
+    <div class="field"><label>Portions</label><input class="input num" id="rePort" type="number" inputmode="decimal" step="0.5" min="0.5" value="${fmtNb(e.qte)}">
+      <p class="hint" id="reKc"><b style="color:var(--grenat)">${round((e.unitKcal||0)*e.qte)} kcal</b> au total</p></div>
+    <div class="sheet-foot"><button class="btn danger" id="reDel">Supprimer</button><button class="btn" id="reSave">Enregistrer</button></div>`);
+  $$('#reMeal button').forEach(b=>b.onclick=()=>{meal=b.dataset.v;$$('#reMeal button').forEach(x=>x.classList.toggle('on',x===b));});
+  $('#rePort').oninput=ev=>{portions=parseFloat(ev.target.value)||0;$('#reKc').innerHTML=`<b style="color:var(--grenat)">${round((e.unitKcal||0)*portions)} kcal</b> au total`;};
+  $('#reSave').onclick=()=>{e.repas=meal;e.qte=portions;saveEntries();closeSheet();renderJournal();toast('Modifié');};
+  $('#reDel').onclick=()=>{entries=entries.filter(x=>x.id!==e.id);saveEntries();closeSheet();renderJournal();toast('Entrée supprimée');};
+}
+/* Sheet générique + gestion du bouton retour (Android) */
+let sheetOpen=false, suppressNav=false;
+function openSheet(html){
+  $('#sheet').innerHTML='<button class="sheet-x" id="sheetX" aria-label="Fermer">✕</button><div class="grab"></div>'+html;
+  $('#scrim').classList.add('show');document.body.style.overflow='hidden';
+  $('#sheet').scrollTop=0;
+  $('#sheetX').onclick=()=>closeSheet();
+  if(!sheetOpen){history.pushState({sheet:1},'');}
+  sheetOpen=true;
+}
+function closeSheet(fromPop){
+  if(!$('#scrim').classList.contains('show'))return;
+  $('#scrim').classList.remove('show');document.body.style.overflow='';
+  if(sheetOpen&&!fromPop){suppressNav=true;sheetOpen=false;history.back();}
+  else{sheetOpen=false;}
+}
+$('#scrim').addEventListener('click',e=>{if(e.target===$('#scrim'))closeSheet();});
+window.addEventListener('popstate',ev=>{
+  if(suppressNav){suppressNav=false;return;}
+  if(sheetOpen){closeSheet(true);return;}
+  const v=(ev.state&&ev.state.view)?ev.state.view:'journal';
+  if(v!==currentView)switchView(v,true);
+});
+
+/* Saisie d'un repas */
+let st={};
+function openEntrySheet(repasKey,existing){
+  st={repas:repasKey||autoMeal(),edit:existing||null,
+    foodId:existing?existing.foodId:null,foodName:existing?existing.foodName:null,
+    qte:existing?existing.qte:100,nUnit:existing&&existing.nUnit!=null?existing.nUnit:null,
+    unitMode:existing&&existing.unitMode?existing.unitMode:'g',unitName:existing?existing.unitName:null,
+    faimAvant:existing&&existing.faimAvant!=null?existing.faimAvant:4,
+    faimApres:existing&&existing.faimApres!=null?existing.faimApres:6,
+    lieu:existing?existing.lieu||'':'',posture:existing?existing.posture||'':'',ecran:existing?!!existing.ecran:false,
+    humeur:existing?existing.humeur||'':'',heure:existing&&existing.heure?existing.heure:new Date().toTimeString().slice(0,5),note:existing?existing.note||'':''};
+
+  const mealSeg=REPAS.map(r=>`<button data-v="${r.key}" class="${r.key===st.repas?'on':''}">${r.emo} ${r.label}</button>`).join('');
+  const segHTML=(arr,sel,attr)=>`<div class="seg" data-seg="${attr}">`+arr.map(o=>`<button data-v="${o}" class="${sel===o?'on':''}">${o}</button>`).join('')+`</div>`;
+  const moodSeg=`<div class="seg mood" data-seg="humeur">`+MOODS.map(m=>`<button data-v="${m.v}" class="${st.humeur===m.v?'on':''}">${m.e} ${m.v}</button>`).join('')+`</div>`;
+  const ctxOpen=(st.lieu||st.posture||st.ecran||st.humeur||st.note)?'open':'';
+
+  openSheet(`
+    <h2>${existing?'Modifier':'Ajouter au journal'}</h2>
+    <div class="sub">Choisis le repas et l'aliment. Le reste est facultatif.</div>
+    <div class="field"><label>Repas</label><div class="seg" data-seg="repas">${mealSeg}</div></div>
+    <div class="field"><label>Aliment</label>
+      <div class="ac"><input class="input" id="acInput" placeholder="Tape 3 lettres (ex. pou…)" autocomplete="off"><div class="ac-list" id="acList"></div></div>
+      <div id="pickedBox"></div>
+    </div>
+    <div id="qtyBox" style="display:none"></div>
+    <div id="restBox" style="display:none">
+      <div class="field"><label>Faim avant <span class="range-val" id="faAv">${st.faimAvant}</span><span class="mini"> /10</span></label>
+        <input type="range" id="rngAv" min="0" max="10" value="${st.faimAvant}"><div class="range-top"><span>repu</span><span>affamé</span></div></div>
+      <div class="field"><label>Faim après <span class="range-val" id="faAp">${st.faimApres}</span><span class="mini"> /10</span></label>
+        <input type="range" id="rngAp" min="0" max="10" value="${st.faimApres}"><div class="range-top"><span>repu</span><span>affamé</span></div></div>
+      <div class="collap ${ctxOpen}" id="ctxCollap">
+        <div class="ctrl" id="ctxToggle"><span>＋ Contexte (facultatif)</span><span class="chev">⌄</span></div>
+        <div class="body">
+          <div class="field"><label>Comment tu te sens ?</label>${moodSeg}</div>
+          <div class="field"><label>Lieu</label>${segHTML(LIEUX,st.lieu,'lieu')}</div>
+          <div class="field"><label>Posture</label>${segHTML(POSTURES,st.posture,'posture')}</div>
+          <div class="field"><label>Devant un écran ?</label><div class="seg" data-seg="ecran"><button data-v="oui" class="${st.ecran?'on':''}">Oui</button><button data-v="non" class="${!st.ecran?'on':''}">Non</button></div></div>
+          <div class="field"><label>Heure</label><input class="input" id="heureInput" type="time" value="${st.heure}"></div>
+          <div class="field"><label>Note</label><textarea class="input" id="noteInput" placeholder="Un mot sur ce moment…">${st.note}</textarea></div>
+        </div>
+      </div>
+    </div>
+    <div class="sheet-foot">
+      ${existing?'<button class="btn danger" id="delEntry">Supprimer</button>':''}
+      <button class="btn" id="saveEntry">${existing?'Enregistrer':'Ajouter'}</button>
+    </div>`);
+
+  $$('#sheet .seg').forEach(seg=>seg.addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b)return; const key=seg.dataset.seg,v=b.dataset.v;
+    if(key==='repas'){[...seg.children].forEach(c=>c.classList.toggle('on',c===b));st.repas=v;return;}
+    const wasOn=b.classList.contains('on');[...seg.children].forEach(c=>c.classList.remove('on'));
+    if(key==='ecran'){b.classList.add('on');st.ecran=(v==='oui');return;}
+    if(!wasOn){b.classList.add('on');st[key]=v;}else{st[key]='';}
+  }));
+  $('#ctxToggle').onclick=()=>$('#ctxCollap').classList.toggle('open');
+  $('#rngAv').oninput=e=>{st.faimAvant=+e.target.value;$('#faAv').textContent=e.target.value;};
+  $('#rngAp').oninput=e=>{st.faimApres=+e.target.value;$('#faAp').textContent=e.target.value;};
+  $('#heureInput').oninput=e=>st.heure=e.target.value;
+  $('#noteInput').oninput=e=>st.note=e.target.value;
+
+  setupAutocomplete();
+  if(st.foodId||st.foodName)showPicked();
+  $('#saveEntry').onclick=saveEntry;
+  if(existing)$('#delEntry').onclick=()=>{entries=entries.filter(x=>x.id!==existing.id);saveEntries();closeSheet();renderJournal();toast('Entrée supprimée');};
+}
+
+function showPicked(){
+  const f=st.foodId?foodById(st.foodId):null;
+  const name=f?f.nom:st.foodName, kc=f?f.kcal:'?';
+  $('#pickedBox').innerHTML=`<div class="card" style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;padding:12px 14px">
+    <div><b style="font-size:14.5px">${name}</b><div class="mini">${kc} kcal / 100 g${f&&f.unite?` · 1 ${f.unite} ≈ ${f.gUnite} g`:''}</div></div>
+    <button class="iconbtn" id="clearPick">✕</button></div>`;
+  $('#clearPick').onclick=()=>{st.foodId=null;st.foodName=null;$('#pickedBox').innerHTML='';$('#qtyBox').style.display='none';$('#restBox').style.display='none';$('#acInput').value='';$('#acInput').focus();};
+  $('#acList').classList.remove('show');
+  $('#qtyBox').style.display='block';$('#restBox').style.display='block';
+  renderQty();
+}
+function renderQty(){
+  const f=st.foodId?foodById(st.foodId):null; const box=$('#qtyBox');
+  const hasUnit=f&&f.unite;
+  let html=`<div class="field"><label>Quantité</label>`;
+  if(hasUnit){
+    html+=`<div class="unit-toggle"><button data-m="piece" class="${st.unitMode!=='g'?'on':''}">En ${f.unite}</button><button data-m="g" class="${st.unitMode==='g'?'on':''}">En grammes</button></div>`;
+  }
+  if(hasUnit&&st.unitMode!=='g'){
+    html+=`<input class="input num" id="qInput" type="number" inputmode="decimal" step="0.5" min="0" value="${st.nUnit||1}">
+      <div class="seg" data-seg="q-quick" style="margin-top:8px">${[0.5,1,2,3].map(q=>`<button data-v="${q}">${fmtNb(q)} ${f.unite}</button>`).join('')}</div>`;
+  }else{
+    html+=`<input class="input num" id="qInput" type="number" inputmode="decimal" value="${st.qte||100}">
+      <div class="seg" data-seg="q-quick" style="margin-top:8px">${[30,50,100,150,200].map(q=>`<button data-v="${q}">${q} g</button>`).join('')}</div>`;
+  }
+  html+=`<p class="hint" id="kcalLive"></p></div>`;
+  box.innerHTML=html;
+  if(hasUnit)$$('#qtyBox .unit-toggle button').forEach(b=>b.onclick=()=>{st.unitMode=b.dataset.m;if(st.unitMode==='g'&&(!st.qte||st.qte<1))st.qte=f.gUnite;if(st.unitMode!=='g'&&!st.nUnit)st.nUnit=1;renderQty();});
+  const qi=$('#qInput');
+  qi.oninput=()=>{const val=parseFloat(qi.value)||0; if(hasUnit&&st.unitMode!=='g'){st.nUnit=val;st.unitName=f.unite;st.qte=round(val*f.gUnite);}else{st.qte=val;} updateKcalLive();};
+  $$('#qtyBox [data-seg="q-quick"] button').forEach(b=>b.onclick=()=>{qi.value=b.dataset.v;qi.dispatchEvent(new Event('input'));});
+  updateKcalLive();
+}
+function updateKcalLive(){
+  const f=st.foodId?foodById(st.foodId):null; if(!f){$('#kcalLive').textContent='';return;}
+  const kc=round(f.kcal*st.qte/100);
+  const detail=(st.unitMode!=='g'&&f.unite)?`${fmtNb(st.nUnit||0)} ${f.unite} ≈ ${st.qte} g`:`${st.qte||0} g`;
+  $('#kcalLive').innerHTML=`<b style="color:var(--grenat)">${kc} kcal</b> · ${detail}`;
+}
+
+/* Autocomplétion (local + Open Food Facts) */
+function setupAutocomplete(){
+  const inp=$('#acInput'),list=$('#acList');
+  inp.addEventListener('input',()=>{const q=inp.value.trim();if(q.length<1){list.classList.remove('show');return;}renderAcLocal(q);});
+  inp.addEventListener('focus',()=>{if(inp.value.trim())renderAcLocal(inp.value.trim());});
+  document.addEventListener('click',e=>{if(!e.target.closest('.ac'))list.classList.remove('show');});
+}
+function renderAcLocal(q){
+  const list=$('#acList'),nq=q.toLowerCase();
+  const matches=foods.filter(f=>f.nom.toLowerCase().includes(nq))
+    .sort((a,b)=>{const ai=a.nom.toLowerCase().startsWith(nq)?0:1,bi=b.nom.toLowerCase().startsWith(nq)?0:1;return ai-bi||a.nom.localeCompare(b.nom);}).slice(0,30);
+  let html=matches.map(f=>{const tag=f.src==='off'?'<span class="tag off">OFF</span>':f.src==='custom'?'<span class="tag">perso</span>':'';
+    return `<div class="ac-item" data-id="${f.id}"><div class="n">${f.nom} ${tag}<small>${f.cat||''}${f.unite?' · 1 '+f.unite:''}</small></div><div class="k">${f.kcal} kcal</div></div>`;}).join('');
+  if(!matches.length)html=`<div class="ac-item" style="cursor:default"><div class="n">Aucun résultat local</div></div>`;
+  html+=`<div class="ac-foot" id="offSearch">🔎 Rechercher « ${q} » en ligne (Open Food Facts)</div>`;
+  list.innerHTML=html;list.classList.add('show');
+  $$('#acList .ac-item[data-id]').forEach(it=>it.onclick=()=>{const nf=foodById(it.dataset.id);st.foodId=nf.id;st.foodName=null;
+    if(nf.unite){st.unitMode='piece';st.nUnit=1;st.unitName=nf.unite;st.qte=round(nf.gUnite);}else{st.unitMode='g';st.qte=100;}
+    $('#acInput').value=nf.nom;showPicked();});
+  $('#offSearch').onclick=()=>offSearch(q);
+}
+async function offSearch(q){
+  const list=$('#acList');list.innerHTML=`<div class="ac-item" style="cursor:default"><div class="n">Recherche en ligne…</div></div>`;
+  try{
+    const url=`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=14&fields=product_name,brands,nutriments`;
+    const ctrl=new AbortController(),to=setTimeout(()=>ctrl.abort(),8000);
+    const res=await fetch(url,{signal:ctrl.signal});clearTimeout(to);const data=await res.json();
+    const prods=(data.products||[]).map(p=>{const n=p.nutriments||{};const kc=n['energy-kcal_100g']??n['energy-kcal_value'];
+      return {nom:(p.product_name||'').trim()+(p.brands?' · '+p.brands.split(',')[0]:''),kcal:kc,prot:n.proteins_100g||0,gluc:n.carbohydrates_100g||0,lip:n.fat_100g||0};
+    }).filter(p=>p.nom&&p.kcal>0).slice(0,12);
+    if(!prods.length){list.innerHTML=`<div class="ac-item" style="cursor:default"><div class="n">Rien trouvé en ligne pour « ${q} »</div></div>`;return;}
+    list.innerHTML=prods.map((p,i)=>`<div class="ac-item" data-off="${i}"><div class="n">${p.nom} <span class="tag off">OFF</span></div><div class="k">${round(p.kcal)} kcal</div></div>`).join('');
+    $$('#acList .ac-item[data-off]').forEach(it=>it.onclick=()=>{const p=prods[+it.dataset.off];
+      const nf={id:uid(),nom:p.nom,kcal:round(p.kcal),prot:+p.prot.toFixed(1),gluc:+p.gluc.toFixed(1),lip:+p.lip.toFixed(1),cat:'Open Food Facts',unite:null,gUnite:null,src:'off'};
+      foods.push(nf);saveFoods();st.foodId=nf.id;st.unitMode='g';st.qte=100;$('#acInput').value=nf.nom;showPicked();toast('Ajouté à ta base');});
+  }catch(err){list.innerHTML=`<div class="ac-item" style="cursor:default"><div class="n">Connexion impossible — réessaie plus tard.</div></div>`;}
+}
+
+function saveEntry(){
+  if(!st.foodId&&!st.foodName){toast('Choisis d\'abord un aliment');return;}
+  const f=foodById(st.foodId);
+  const piece=(f&&f.unite&&st.unitMode!=='g');
+  const base={repas:st.repas,date:curDate,foodId:st.foodId,foodName:st.foodName,
+    qte:piece?round((st.nUnit||0)*f.gUnite):(st.qte||0),
+    nUnit:piece?(st.nUnit||0):null,unitMode:piece?'piece':'g',unitName:piece?f.unite:null,
+    faimAvant:st.faimAvant,faimApres:st.faimApres,lieu:st.lieu,posture:st.posture,ecran:st.ecran,humeur:st.humeur,heure:st.heure,note:st.note};
+  base.kcalCache=f?round(f.kcal*base.qte/100):0;
+  if(st.edit)Object.assign(st.edit,base);else entries.push({id:uid(),...base});
+  saveEntries();closeSheet();renderJournal();toast(st.edit?'Modifié':'Ajouté ✓');
+}
+/* Profil */
+function renderProfile(){
+  $$('#pSexe button').forEach(b=>{b.classList.toggle('on',b.dataset.v===profile.sexe);b.onclick=()=>{profile.sexe=b.dataset.v;saveProfile();renderProfile();};});
+  $('#pAge').value=profile.age||'';$('#pTaille').value=profile.taille||'';$('#pPoids').value=profile.poids||'';$('#pActivite').value=profile.activite||'1.55';
+  $$('#pObjectif button').forEach(b=>{b.classList.toggle('on',b.dataset.v===String(profile.objectif));b.onclick=()=>{profile.objectif=b.dataset.v;saveProfile();renderProfile();};});
+  $('#pAge').oninput=e=>{profile.age=e.target.value;saveProfile();updateMetab();};
+  $('#pTaille').oninput=e=>{profile.taille=e.target.value;saveProfile();updateMetab();};
+  $('#pPoids').oninput=e=>{profile.poids=e.target.value;saveProfile();updateMetab();};
+  $('#pActivite').onchange=e=>{profile.activite=e.target.value;saveProfile();updateMetab();};
+  const o=parseFloat(profile.objectif);
+  $('#objHint').textContent=o<0?`Déficit de ${-o} kcal/jour → environ ${(-o*7/7700).toFixed(1).replace('.',',')} kg/semaine en moins.`:o>0?`Surplus de ${o} kcal/jour pour une prise progressive.`:`Maintien de ton poids actuel.`;
+  $('#foodCount2').textContent=`${foods.length} aliments · ${foods.filter(f=>f.src!=='base').length} ajoutés`;
+  updateMetab();
+}
+function updateMetab(){
+  const m=metabolism();
+  $('#mBmr').innerHTML=m.ok?`${round(m.bmr)}<small> kcal</small>`:'—<small> kcal</small>';
+  $('#mTdee').innerHTML=m.ok?`${round(m.tdee)}<small> kcal</small>`:'—<small> kcal</small>';
+  $('#mGoal').innerHTML=m.ok?`${round(m.goal)}<small> kcal</small>`:'—<small> kcal</small>';
+  if(m.ok){const i=m.imc;let cat=i<18.5?'maigreur':i<25?'corpulence normale':i<30?'surpoids':'obésité';
+    $('#mImc').textContent=i.toFixed(1).replace('.',',');
+    $('#imcHint').textContent=`IMC ${i.toFixed(1).replace('.',',')} — ${cat}. L'IMC est un repère général, pas un diagnostic ; il ne tient pas compte de la masse musculaire.`;
+  }else{$('#mImc').textContent='—';$('#imcHint').textContent='Renseigne âge, taille et poids pour estimer ton métabolisme.';}
+}
+
+/* Base d'aliments */
+function renderFoods(){
+  const q=($('#foodFilter').value||'').toLowerCase().trim();
+  const host=$('#foodHost');host.innerHTML='';
+  let arr=foods.slice().sort((a,b)=>a.nom.localeCompare(b.nom));
+  if(q)arr=arr.filter(f=>f.nom.toLowerCase().includes(q));
+  $('#foodCount').textContent=`${foods.length} aliments · ${foods.filter(f=>f.src!=='base').length} ajoutés`;
+  arr.slice(0,300).forEach(f=>{
+    const row=document.createElement('div');row.className='frow';
+    const tag=f.src==='off'?'<span class="badge">OFF</span>':f.src==='custom'?'<span class="badge">perso</span>':'';
+    row.innerHTML=`<div class="fn"><b>${f.nom} ${tag}</b><span>${f.cat||''}${f.unite?` · 1 ${f.unite} ≈ ${f.gUnite} g`:''} · P ${f.prot||0} · G ${f.gluc||0} · L ${f.lip||0}</span></div>
+      <div class="fk">${f.kcal}<small style="font-family:Mulish;font-size:11px;color:var(--ink-soft)"> /100g</small></div><button class="ed">✎</button>`;
+    row.querySelector('.ed').onclick=()=>openFoodSheet(f);
+    host.appendChild(row);
+  });
+  if(!arr.length)host.innerHTML='<div class="empty"><div class="big">❦</div>Aucun aliment ne correspond.</div>';
+}
+function openFoodSheet(food){
+  const e=food||{nom:'',kcal:'',prot:'',gluc:'',lip:'',cat:'',unite:'',gUnite:''};
+  const esc=s=>(s==null?'':String(s)).replace(/"/g,'&quot;');
+  openSheet(`
+    <h2>${food?'Modifier l\'aliment':'Nouvel aliment'}</h2>
+    <div class="sub">Valeurs pour 100 g (ou 100 ml).</div>
+    <div class="field"><label>Nom</label><input class="input" id="fNom" value="${esc(e.nom)}" placeholder="ex. Riz basmati cuit"></div>
+    <div class="field"><label>Calories pour 100 g (kcal)</label><input class="input num" id="fKcal" type="number" inputmode="decimal" value="${e.kcal}"></div>
+    <div class="three">
+      <div class="field"><label>Protéines</label><input class="input num" id="fProt" type="number" inputmode="decimal" value="${e.prot}"></div>
+      <div class="field"><label>Glucides</label><input class="input num" id="fGluc" type="number" inputmode="decimal" value="${e.gluc}"></div>
+      <div class="field"><label>Lipides</label><input class="input num" id="fLip" type="number" inputmode="decimal" value="${e.lip}"></div>
+    </div>
+    <div class="field"><label>Catégorie</label><input class="input" id="fCat" value="${esc(e.cat)}" placeholder="ex. Féculents"></div>
+    <div class="two">
+      <div class="field"><label>Unité à la pièce <span class="mini">(facultatif)</span></label><input class="input" id="fUnite" value="${esc(e.unite)}" placeholder="ex. pomme, tranche, œuf"></div>
+      <div class="field"><label>Poids d'une unité (g)</label><input class="input num" id="fGUnite" type="number" inputmode="decimal" value="${e.gUnite||''}"></div>
+    </div>
+    <p class="hint">Renseigne ces deux champs pour pouvoir compter en pièces (ex. « 1 pomme ≈ 150 g »).</p>
+    <div class="sheet-foot">${food?'<button class="btn danger" id="fDel">Supprimer</button>':''}<button class="btn" id="fSave">${food?'Enregistrer':'Créer'}</button></div>`);
+  $('#fSave').onclick=()=>{
+    const nom=$('#fNom').value.trim(),kcal=parseFloat($('#fKcal').value);
+    if(!nom){toast('Donne un nom');return;} if(!(kcal>=0)){toast('Indique les calories');return;}
+    const unite=$('#fUnite').value.trim()||null, gU=parseFloat($('#fGUnite').value);
+    const obj={nom,kcal:round(kcal),prot:+$('#fProt').value||0,gluc:+$('#fGluc').value||0,lip:+$('#fLip').value||0,cat:$('#fCat').value.trim(),
+      unite:(unite&&gU>0)?unite:null,gUnite:(unite&&gU>0)?round(gU):null};
+    if(food)Object.assign(food,obj);else foods.push({id:uid(),src:'custom',...obj});
+    saveFoods();closeSheet();renderFoods();toast(food?'Aliment modifié':'Aliment créé ✓');
+  };
+  if(food)$('#fDel').onclick=()=>{
+    const used=entries.some(x=>x.foodId===food.id);
+    if(used&&!confirm('Cet aliment est utilisé dans ton journal. Le supprimer gardera les entrées existantes. Continuer ?'))return;
+    foods=foods.filter(f=>f.id!==food.id);saveFoods();closeSheet();renderFoods();toast('Aliment supprimé');
+  };
+}
+
+/* Poids */
+function openWeightSheet(){
+  openSheet(`<h2>Noter mon poids</h2><div class="sub">Pour suivre ton évolution dans les statistiques.</div>
+    <div class="two"><div class="field"><label>Date</label><input class="input" id="wDate" type="date" value="${todayISO()}"></div>
+    <div class="field"><label>Poids (kg)</label><input class="input num" id="wVal" type="number" inputmode="decimal" value="${profile.poids||''}"></div></div>
+    <div class="sheet-foot"><button class="btn" id="wSave">Enregistrer</button></div>`);
+  $('#wSave').onclick=()=>{
+    const d=$('#wDate').value,v=parseFloat($('#wVal').value);
+    if(!d||!(v>0)){toast('Date et poids requis');return;}
+    weights=weights.filter(w=>w.date!==d);weights.push({date:d,poids:v});weights.sort((a,b)=>a.date<b.date?-1:1);
+    saveWeights();profile.poids=String(weights[weights.length-1].poids);saveProfile();
+    closeSheet();renderStats();toast('Poids enregistré ✓');
+  };
+}
+/* Recettes */
+let recipeCat='Tous';
+const RCATS=['Tous','Petit déjeuner','Déjeuner','Dîner','En-cas','Dessert'];
+function renderRecipes(){
+  $('#rcats').innerHTML=RCATS.map(c=>`<button data-c="${c}" class="${c===recipeCat?'on':''}">${c}</button>`).join('');
+  $$('#rcats button').forEach(b=>b.onclick=()=>{recipeCat=b.dataset.c;renderRecipes();});
+  const arr=allRecipes().filter(r=>recipeCat==='Tous'||r.cat===recipeCat);
+  $('#recipeHost').innerHTML=arr.map((r,i)=>`
+    <div class="rcard" data-i="${i}">
+      <div class="rh"><div><h3>${r.nom} ${r.id?'<span class=\"tag-mine\">perso</span>':''}</h3><div class="rmeta"><span>${r.cat}</span><span>⏱ ${r.t}</span><span>${r.portions} portion${r.portions>1?'s':''}</span></div></div>
+        <div class="rkc">${r.kcal}<small>kcal / portion</small></div></div>
+      <div class="rgo">Voir ingrédients &amp; préparation ›</div>
+    </div>`).join('')+`<p class="muted" style="font-size:12.5px;text-align:center;margin:6px 4px 0">${allRecipes().length} recettes · ${userRecipes.length} à toi</p>`;
+  $$('#recipeHost .rcard').forEach(c=>c.onclick=()=>openRecipeDetail(arr[+c.dataset.i]));
+}
+function openRecipeDetail(rec){
+  let meal=autoMeal(),portions=1;
+  const mealSeg=REPAS.map(r=>`<button data-v="${r.key}" class="${r.key===meal?'on':''}">${r.emo} ${r.label}</button>`).join('');
+  openSheet(`
+    <h2>${rec.nom}</h2>
+    <div class="rdetail">
+      <div class="meta-row" style="margin-top:10px">
+        <div class="pill"><b>${rec.kcal}</b> kcal/portion</div><div class="pill">⏱ <b>${rec.t}</b></div>
+        <div class="pill"><b>${rec.portions}</b> portion${rec.portions>1?'s':''}</div><div class="pill">${rec.cat}</div>
+      </div>
+      <div class="section-title" style="margin-top:4px">Ingrédients</div>
+      <ul class="ing-list">${rec.ing.map(i=>`<li>${i}</li>`).join('')}</ul>
+      <p class="hint">Pour ${rec.portions} portion${rec.portions>1?'s':''}.</p>
+      <div class="section-title">Préparation</div>
+      <ol class="step-list">${rec.etapes.map(s=>`<li>${s}</li>`).join('')}</ol>
+      <hr class="div">
+      <div class="section-title" style="margin-top:0">Ajouter à mon journal</div>
+      <div class="field"><label>Repas</label><div class="seg" id="recMeal">${mealSeg}</div></div>
+      <div class="field"><label>Portions</label><input class="input num" id="recPort" type="number" inputmode="decimal" value="1" step="0.5" min="0.5">
+        <p class="hint" id="recKc"><b style="color:var(--grenat)">${rec.kcal} kcal</b> au total</p></div>
+      <div class="sheet-foot"><button class="btn" id="recSave">Ajouter au journal</button></div>
+      ${rec.id?'<button class="btn danger sm" id="recDel" style="width:100%;margin-top:10px">Supprimer cette recette</button>':''}
+    </div>`);
+  $$('#recMeal button').forEach(b=>b.onclick=()=>{meal=b.dataset.v;$$('#recMeal button').forEach(x=>x.classList.toggle('on',x===b));});
+  $('#recPort').oninput=e=>{portions=parseFloat(e.target.value)||0;$('#recKc').innerHTML=`<b style="color:var(--grenat)">${round(rec.kcal*portions)} kcal</b> au total`;};
+  if(rec.id){const rd=$('#recDel');if(rd)rd.onclick=()=>{if(confirm('Supprimer cette recette de ta bibliothèque ?')){userRecipes=userRecipes.filter(x=>x.id!==rec.id);saveRecipes();closeSheet();renderRecipes();toast('Recette supprimée');}};}
+  $('#recSave').onclick=()=>{
+    entries.push({id:uid(),date:curDate,repas:meal,foodId:null,foodName:rec.nom,isRecipe:true,unitKcal:rec.kcal,qte:portions,
+      faimAvant:null,faimApres:null,lieu:'',posture:'',ecran:false,humeur:'',heure:new Date().toTimeString().slice(0,5),note:''});
+    saveEntries();closeSheet();switchView('journal');renderJournal();toast('Recette ajoutée ✓');
+  };
+}
+
+/* Générateur de menu du jour */
+function pickRecipe(cat,targetKcal,exclude){
+  let pool=allRecipes().filter(r=>r.cat===cat&&!exclude.has(r.nom));
+  if(!pool.length)pool=allRecipes().filter(r=>r.cat===cat);
+  if(!pool.length)return null;
+  pool=pool.slice().sort((a,b)=>Math.abs(a.kcal-targetKcal)-Math.abs(b.kcal-targetKcal));
+  const top=pool.slice(0,Math.min(4,pool.length));
+  return top[Math.floor(Math.random()*top.length)];
+}
+function generateDayMenu(){
+  const target=dailyTarget(); if(!target)return null;
+  const slots=[
+    {meal:'petit-dej',label:'Petit déjeuner',emo:'☕',cat:'Petit déjeuner',ratio:.25},
+    {meal:'collation',label:'Collation du matin',emo:'🍎',cat:'En-cas',ratio:.10},
+    {meal:'dejeuner',label:'Déjeuner',emo:'🍽️',cat:'Déjeuner',ratio:.30},
+    {meal:'collation',label:'Collation de l\u2019après-midi',emo:'✨',cat:'En-cas',ratio:.10},
+    {meal:'diner',label:'Dîner',emo:'🌙',cat:'Dîner',ratio:.25}
+  ];
+  const used=new Set();
+  return slots.map(s=>{const rec=pickRecipe(s.cat,target*s.ratio,used);if(rec)used.add(rec.nom);return Object.assign({},s,{rec});});
+}
+function openDayMenuSheet(){
+  const target=dailyTarget();
+  if(!target){openSheet(`<h2>Menu du jour</h2><p class="hint" style="margin-top:8px">Renseigne d'abord ton profil (poids, taille, âge, activité) pour que je calcule tes besoins caloriques.</p><div class="sheet-foot"><button class="btn" id="goProf">Aller au profil</button></div>`);$('#goProf').onclick=()=>{closeSheet();switchView('profile');};return;}
+  let menu=generateDayMenu();
+  function render(){
+    const total=menu.reduce((s,x)=>s+(x.rec?x.rec.kcal:0),0),diff=total-target;
+    openSheet(`
+      <h2>Menu du jour</h2>
+      <p class="sub">Calibré sur ~${target} kcal · 5 repas</p>
+      ${menu.map((x,i)=>`<div class="day-slot" data-i="${i}">
+        <div class="ds-emo">${x.emo}</div>
+        <div class="ds-body"><div class="ds-meal">${x.label}</div><div class="ds-name">${x.rec?x.rec.nom:'—'}</div></div>
+        <div class="ds-kc">${x.rec?x.rec.kcal:0}</div></div>`).join('')}
+      <div class="day-total"><span>Total de la journée</span><span><b>${total}</b> kcal</span></div>
+      <p class="hint" style="text-align:center;margin-top:8px">${diff>=0?'+':''}${diff} kcal par rapport à ton objectif · touche un repas pour voir la recette</p>
+      <div class="sheet-foot"><button class="btn ghost" id="regen">🔄 Régénérer</button><button class="btn" id="addAll">Ajouter au journal</button></div>`);
+    $('#regen').onclick=()=>{menu=generateDayMenu();render();};
+    $('#addAll').onclick=()=>{
+      menu.forEach(x=>{if(!x.rec)return;entries.push({id:uid(),date:curDate,repas:x.meal,foodId:null,foodName:x.rec.nom,isRecipe:true,unitKcal:x.rec.kcal,qte:1,faimAvant:null,faimApres:null,lieu:'',posture:'',ecran:false,humeur:'',heure:'',note:'Menu du jour'});});
+      saveEntries();closeSheet();switchView('journal');renderJournal();toast('Menu ajouté ✓');
+    };
+    $$('.day-slot').forEach(el=>el.onclick=()=>{const i=+el.dataset.i;if(menu[i].rec)openRecipeDetail(menu[i].rec);});
+  }
+  render();
+}
+
+/* Import d'une recette depuis un lien web */
+function isoToTime(d){ if(!d)return''; const m=/PT(?:(\d+)H)?(?:(\d+)M)?/.exec(''+d); if(!m)return''; const h=+(m[1]||0),mi=+(m[2]||0); if(h&&mi)return h+' h '+mi; if(h)return h+' h'; if(mi)return mi+' min'; return ''; }
+function flattenInstr(ri){ const out=[]; const walk=x=>{ if(!x)return; if(typeof x==='string'){x.split(/\r?\n/).forEach(s=>{s=s.trim();if(s)out.push(s);});return;} if(Array.isArray(x)){x.forEach(walk);return;} if(x.text)out.push((''+x.text).trim()); if(x.itemListElement)walk(x.itemListElement); }; walk(ri); return out; }
+function findRecipeNode(data){ const nodes=[]; const scan=o=>{ if(!o||typeof o!=='object')return; if(Array.isArray(o)){o.forEach(scan);return;} if(o['@graph'])scan(o['@graph']); nodes.push(o); }; scan(data); return nodes.find(o=>{const t=o['@type'];return t==='Recipe'||(Array.isArray(t)&&t.includes('Recipe'));}); }
+function guessCat(node){ const s=((node.recipeCategory||'')+' '+(node.name||'')).toString().toLowerCase();
+  if(/dessert|g[âa]teau|tarte|cr[èe]me|mousse|cookie|cake|glace|sucr/.test(s))return'Dessert';
+  if(/petit.?d[ée]j|breakfast|matin|brunch/.test(s))return'Petit déjeuner';
+  if(/snack|en.?cas|go[ûu]ter|ap[ée]ritif|amuse/.test(s))return'En-cas';
+  if(/d[îi]ner|soir|soupe|velout/.test(s))return'Dîner';
+  return'Déjeuner'; }
+async function fetchRecipeFromUrl(url){
+  const proxies=[u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),u=>'https://corsproxy.io/?url='+encodeURIComponent(u)];
+  let html=null;
+  for(const p of proxies){ try{ const r=await fetch(p(url)); if(r.ok){ const t=await r.text(); if(t&&t.length>200){html=t;break;} } }catch(e){} }
+  if(!html)throw new Error('réseau');
+  const doc=new DOMParser().parseFromString(html,'text/html');
+  const scripts=[...doc.querySelectorAll('script[type="application/ld+json"]')];
+  for(const s of scripts){ let data; try{data=JSON.parse(s.textContent);}catch(_){continue;} const node=findRecipeNode(data); if(node)return node; }
+  throw new Error('aucune recette');
+}
+function openImportRecipeSheet(){
+  const catOpts=['Petit déjeuner','Déjeuner','Dîner','En-cas','Dessert'].map(c=>`<option value="${c}">${c}</option>`).join('');
+  openSheet(`
+    <h2>Importer une recette</h2>
+    <p class="sub">Colle le lien d'une recette : je tente d'en extraire les ingrédients et les étapes. Tu pourras tout vérifier avant d'enregistrer.</p>
+    <div class="field"><label>Lien de la recette</label>
+      <input class="input" id="impUrl" type="url" inputmode="url" placeholder="https://...">
+    </div>
+    <button class="btn" id="impFetch" style="width:100%">Récupérer la recette</button>
+    <p class="hint" id="impMsg" style="margin-top:8px"></p>
+    <hr class="div">
+    <div class="field"><label>Nom</label><input class="input" id="impNom" placeholder="Nom de la recette"></div>
+    <div class="field"><label>Catégorie</label><select class="input" id="impCat">${catOpts}</select></div>
+    <div class="row" style="display:flex;gap:10px">
+      <div class="field" style="flex:1"><label>kcal / portion</label><input class="input num" id="impKcal" type="number" inputmode="numeric" placeholder="ex. 350"></div>
+      <div class="field" style="flex:1"><label>Portions</label><input class="input num" id="impPort" type="number" inputmode="numeric" value="1"></div>
+    </div>
+    <div class="field"><label>Temps</label><input class="input" id="impT" placeholder="ex. 25 min"></div>
+    <div class="field"><label>Ingrédients (un par ligne)</label><textarea class="input" id="impIng" rows="5" placeholder="100 g de..."></textarea></div>
+    <div class="field"><label>Préparation (une étape par ligne)</label><textarea class="input" id="impEt" rows="6" placeholder="Étape 1..."></textarea></div>
+    <div class="sheet-foot"><button class="btn" id="impSave">Enregistrer dans mes recettes</button></div>
+  `);
+  $('#impFetch').onclick=async()=>{
+    const url=$('#impUrl').value.trim(); if(!url){$('#impMsg').textContent='Colle d\u2019abord un lien.';return;}
+    $('#impMsg').textContent='Récupération en cours…'; $('#impFetch').disabled=true;
+    try{
+      const n=await fetchRecipeFromUrl(url);
+      $('#impNom').value=n.name||'';
+      $('#impCat').value=guessCat(n);
+      const ing=(Array.isArray(n.recipeIngredient)?n.recipeIngredient:[n.recipeIngredient]).filter(Boolean).map(x=>(''+x).trim());
+      $('#impIng').value=ing.join('\n');
+      $('#impEt').value=flattenInstr(n.recipeInstructions).join('\n');
+      $('#impT').value=isoToTime(n.totalTime||n.cookTime||n.prepTime);
+      const y=(''+(n.recipeYield||'')).match(/\d+/); if(y)$('#impPort').value=y[0];
+      let kcal=0; if(n.nutrition&&n.nutrition.calories){const mm=(''+n.nutrition.calories).match(/(\d+[.,]?\d*)/);if(mm)kcal=Math.round(parseFloat(mm[1].replace(',','.')));}
+      if(kcal)$('#impKcal').value=kcal;
+      $('#impMsg').innerHTML=ing.length?'✓ Recette récupérée — vérifie puis enregistre.'+(kcal?'':' <b>Pense à renseigner les calories.</b>'):'Recette partielle — complète les champs manquants.';
+    }catch(e){
+      $('#impMsg').innerHTML='Je n\u2019ai pas pu lire cette page automatiquement (certains sites le bloquent). Tu peux saisir la recette à la main ci-dessous.';
+    }
+    $('#impFetch').disabled=false;
+  };
+  $('#impSave').onclick=()=>{
+    const nom=$('#impNom').value.trim();
+    const ing=$('#impIng').value.split('\n').map(s=>s.trim()).filter(Boolean);
+    const et=$('#impEt').value.split('\n').map(s=>s.trim()).filter(Boolean);
+    if(!nom){toast('Donne un nom à la recette');return;}
+    if(!ing.length&&!et.length){toast('Ajoute des ingrédients ou des étapes');return;}
+    const rec={id:uid(),cat:$('#impCat').value,nom,kcal:Math.round(parseFloat($('#impKcal').value)||0),portions:parseInt($('#impPort').value)||1,t:$('#impT').value.trim()||'—',ing,etapes:et,src:'web'};
+    userRecipes.push(rec); saveRecipes(); closeSheet(); recipeCat='Tous'; renderRecipes(); toast('Recette ajoutée ✓');
+  };
+}
+
+/* Statistiques */
+let statDays=14,ctxKey='humeur',charts={};
+const GR='#7A1F2B',GRD='#511019',SAGE='#6E7C56',OCH='#C0883A';
+function lastDays(d){const out=[],base=new Date(todayISO()+'T12:00');for(let i=d-1;i>=0;i--){const x=new Date(base);x.setDate(x.getDate()-i);out.push(x.toISOString().slice(0,10));}return out;}
+const dlabel=iso=>{const d=new Date(iso+'T12:00');return d.getDate()+'/'+(d.getMonth()+1);};
+function mkChart(id,cfg){if(charts[id])charts[id].destroy();charts[id]=new Chart($('#'+id),cfg);}
+function baseOpts(o={}){return{responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},
+  plugins:{legend:{display:!!o.legend,labels:{boxWidth:12,font:{size:12}}},tooltip:{backgroundColor:GRD}},
+  scales:{x:{grid:{display:false},ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:8,font:{size:11}}},
+    y:{beginAtZero:o.begin!==false,grid:{color:'rgba(122,31,43,.07)'},ticks:{font:{size:11}},title:{display:!!o.yTitle,text:o.yTitle||''}}}};}
+function renderStats(){
+  const days=lastDays(statDays),kcal=days.map(dayTotal),target=dailyTarget();
+  const withData=days.filter(d=>dayTotal(d)>0);
+  const avg=withData.length?round(withData.reduce((s,d)=>s+dayTotal(d),0)/withData.length):0;
+  $('#stAvg').innerHTML=(avg||'—')+'<small> kcal</small>';
+  if(target&&withData.length){const bal=round(withData.reduce((s,d)=>s+(dayTotal(d)-target),0));
+    $('#stBal').innerHTML=(bal<=0?'−'+(-bal):'+'+bal)+'<small> kcal</small>';$('#stBal').style.color=bal<=0?SAGE:OCH;
+  }else{$('#stBal').textContent='—';$('#stBal').style.color='';}
+  const ds=[{label:'Calories',data:kcal,borderColor:GR,backgroundColor:'rgba(122,31,43,.10)',fill:true,tension:.35,pointRadius:days.length>31?0:3,pointBackgroundColor:GR,borderWidth:2.5}];
+  if(target)ds.push({label:'Objectif',data:days.map(()=>target),borderColor:SAGE,borderDash:[6,5],pointRadius:0,borderWidth:1.8,fill:false});
+  mkChart('chKcal',{type:'line',data:{labels:days.map(dlabel),datasets:ds},options:baseOpts({legend:!!target})});
+  const wpts=weights.filter(w=>w.date>=days[0]);
+  mkChart('chWeight',{type:'line',data:{labels:wpts.length?wpts.map(p=>dlabel(p.date)):['—'],datasets:[{label:'Poids (kg)',data:wpts.map(p=>p.poids),borderColor:GRD,backgroundColor:'rgba(81,16,25,.08)',fill:true,tension:.3,pointRadius:4,pointBackgroundColor:GRD,borderWidth:2.5}]},options:baseOpts({yTitle:'kg',begin:false})});
+  const mealSum=REPAS.map(r=>entries.filter(e=>days.includes(e.date)&&e.repas===r.key).reduce((s,e)=>s+entryKcal(e),0));
+  mkChart('chMeal',{type:'doughnut',data:{labels:REPAS.map(r=>r.label),datasets:[{data:mealSum,backgroundColor:['#7A1F2B','#A8505C','#C0883A','#6E7C56','#9A3340'],borderColor:'#FBF6EC',borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'right',labels:{boxWidth:12,font:{size:12}}}}}});
+  renderCtxChart();renderHungerChart();
+}
+function renderCtxChart(){
+  const days=lastDays(statDays),inR=entries.filter(e=>days.includes(e.date)),g={};
+  inR.forEach(e=>{let v=ctxKey==='ecran'?(e.ecran?'Devant écran':'Sans écran'):(e[ctxKey]||'Non précisé');if(!g[v])g[v]={s:0,n:0};g[v].s+=entryKcal(e);g[v].n++;});
+  const labels=Object.keys(g),data=labels.map(l=>round(g[l].s/g[l].n));
+  mkChart('chCtx',{type:'bar',data:{labels:labels.length?labels:['—'],datasets:[{label:'kcal moyen / prise',data,backgroundColor:'#A8505C',borderRadius:8,maxBarThickness:46}]},options:baseOpts({})});
+  const names={humeur:'ton humeur',posture:'ta posture',lieu:'le lieu',ecran:'la présence d\'un écran'};
+  $('#ctxHint').textContent=labels.length?`Calories moyennes par prise alimentaire selon ${names[ctxKey]}.`:'Renseigne ces champs en ajoutant des repas pour voir les tendances.';
+}
+function renderHungerChart(){
+  const days=lastDays(statDays),inR=entries.filter(e=>days.includes(e.date));
+  const av=REPAS.map(r=>{const a=inR.filter(e=>e.repas===r.key&&e.faimAvant!=null);return a.length?+(a.reduce((s,e)=>s+e.faimAvant,0)/a.length).toFixed(1):null;});
+  const ap=REPAS.map(r=>{const a=inR.filter(e=>e.repas===r.key&&e.faimApres!=null);return a.length?+(a.reduce((s,e)=>s+e.faimApres,0)/a.length).toFixed(1):null;});
+  mkChart('chHunger',{type:'bar',data:{labels:REPAS.map(r=>r.label),datasets:[
+    {label:'Faim avant',data:av,backgroundColor:'#9A3340',borderRadius:6,maxBarThickness:22},
+    {label:'Faim après',data:ap,backgroundColor:'#6E7C56',borderRadius:6,maxBarThickness:22}]},
+    options:{...baseOpts({legend:true}),scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,max:10,grid:{color:'rgba(122,31,43,.07)'},ticks:{font:{size:11}}}}}});
+}
+
+/* Export CSV */
+const csvCell=v=>'"'+(v==null?'':String(v)).replace(/"/g,'""')+'"';
+function exportCSV(){
+  const head=['Date','Heure','Repas','Aliment','Quantité','Calories','Faim avant','Faim après','Humeur','Lieu','Posture','Écran','Note'];
+  const lines=[head.map(csvCell).join(';')];
+  entries.slice().sort((a,b)=>((a.date+(a.heure||''))<(b.date+(b.heure||'')))?-1:1).forEach(e=>{
+    const f=foodById(e.foodId);
+    lines.push([e.date,e.heure||'',(REPAS.find(r=>r.key===e.repas)||{}).label||e.repas,f?f.nom:(e.foodName||''),entryQtyLabel(e),entryKcal(e),
+      e.faimAvant??'',e.faimApres??'',e.humeur||'',e.lieu||'',e.posture||'',e.ecran?'oui':'non',e.note||''].map(csvCell).join(';'));
+  });
+  lines.push('');lines.push(['Suivi du poids'].map(csvCell).join(';'));lines.push(['Date','Poids (kg)'].map(csvCell).join(';'));
+  weights.forEach(w=>lines.push([w.date,String(w.poids).replace('.',',')].map(csvCell).join(';')));
+  const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='carnet-'+todayISO()+'.csv';
+  document.body.appendChild(a);a.click();a.remove();toast('CSV téléchargé ✓');
+}
+
+/* Init */
+function initApp(){
+  Chart.defaults.font.family='Mulish, sans-serif';Chart.defaults.color='#6E5A4F';
+  $$('.nav button[data-v]').forEach(b=>b.onclick=()=>switchView(b.dataset.v));
+  $('#navAdd').onclick=()=>openEntrySheet(autoMeal(),null);
+  $('#goFoods').onclick=()=>switchView('foods');
+  $('#dayMenuBtn').onclick=openDayMenuSheet;
+  $('#importRecipeBtn').onclick=openImportRecipeSheet;
+  $('#dayPrev').onclick=()=>shiftDay(-1);$('#dayNext').onclick=()=>shiftDay(1);
+  $('#exportBtn').onclick=exportCSV;$('#export2').onclick=exportCSV;
+  $('#newFoodBtn').onclick=()=>openFoodSheet(null);
+  $('#foodFilter').oninput=()=>renderFoods();
+  $('#addWeightBtn').onclick=openWeightSheet;
+  $$('#statPeriod button').forEach(b=>b.onclick=()=>{statDays=+b.dataset.d;$$('#statPeriod button').forEach(x=>x.classList.toggle('on',x===b));renderStats();});
+  $$('#ctxPicker button').forEach(b=>b.onclick=()=>{ctxKey=b.dataset.k;$$('#ctxPicker button').forEach(x=>x.classList.toggle('on',x===b));renderCtxChart();});
+  $('#wipeBtn').onclick=()=>{if(confirm('Tout effacer ? Cette action est définitive. Pense à exporter ton CSV avant.')){['foods','entries','weights','profile'].forEach(k=>localStorage.removeItem('ccj_'+k));location.reload();}};
+  const cp=$('#changePin'); if(cp)cp.onclick=()=>{
+    const a=prompt('Nouveau code à 4 chiffres :');if(a===null)return;
+    if(!/^\d{4}$/.test(a)){toast('Il faut 4 chiffres');return;}
+    const b=prompt('Confirme ton nouveau code :');if(b===null)return;
+    if(a!==b){toast('Les deux codes diffèrent');return;}
+    localStorage.setItem('ccj_pincode',a);toast('Code mis à jour');
+  };
+  const bb=$('#backupBtn'); if(bb)bb.onclick=()=>{
+    const payload={app:'carnet',version:1,date:new Date().toISOString(),data:{foods,entries,weights,profile,recipes:userRecipes}};
+    const blob=new Blob([JSON.stringify(payload)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='carnet-sauvegarde-'+todayISO()+'.json';
+    document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
+    toast('Sauvegarde téléchargée ✓');
+  };
+  const rb=$('#restoreBtn'),rf=$('#restoreFile');
+  if(rb&&rf){ rb.onclick=()=>rf.click();
+    rf.onchange=()=>{ const f=rf.files[0]; if(!f)return;
+      const reader=new FileReader();
+      reader.onload=()=>{ try{ const obj=JSON.parse(reader.result); const d=(obj&&obj.data)?obj.data:obj;
+        if(!d||typeof d!=='object'){toast('Fichier non reconnu');return;}
+        if(!confirm('Restaurer cette sauvegarde ? Les données actuelles de cet appareil seront remplacées.')){rf.value='';return;}
+        if(d.foods)LS.set('foods',d.foods); if(d.entries)LS.set('entries',d.entries);
+        if(d.weights)LS.set('weights',d.weights); if(d.profile)LS.set('profile',d.profile);
+        if(d.recipes)LS.set('recipes',d.recipes);
+        toast('Restauration réussie ✓'); setTimeout(()=>location.reload(),600);
+      }catch(e){toast('Fichier illisible');} };
+      reader.readAsText(f); rf.value='';
+    };
+  }
+  renderJournal();
+}
+document.addEventListener('DOMContentLoaded',setupLock);
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').catch(()=>{});});}
+</script>
+</body>
+</html>
