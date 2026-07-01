@@ -376,8 +376,9 @@ hr.div{border:0;border-top:1px solid var(--sable-line);margin:16px 0}
     <div class="section-title">Calories par jour</div>
     <div class="card"><div class="chartbox"><canvas id="chKcal"></canvas></div></div>
     <div class="section-title">Mes horaires de repas</div>
-    <div class="card"><div class="chartbox sm"><canvas id="chHours"></canvas></div>
-      <p class="hint">À quelles heures de la journée tu manges le plus souvent.</p></div>
+    <div class="card">
+      <div class="mini-seg" id="hoursMode" style="width:fit-content;margin-bottom:12px"><button data-v="count" class="on">Par prise</button><button data-v="kcal">Par calories</button></div>
+      <div class="chartbox sm"><canvas id="chHours"></canvas></div></div>
     <div class="section-title">Évolution du poids</div>
     <div class="card"><div class="chartbox sm"><canvas id="chWeight"></canvas></div>
       <button class="btn ghost sm" id="addWeightBtn" style="margin-top:12px;width:100%">＋ Noter mon poids</button></div>
@@ -752,7 +753,74 @@ const SEED_FOODS=[
   ["Boisson énergisante", 45, 0, 11, 0, "Boissons", "canette", 250],
   ["Vin blanc", 82, 0.1, 2.6, 0, "Boissons", "verre", 120],
   ["Champagne", 80, 0.2, 1.4, 0, "Boissons", "flûte", 100],
-  ["Mojito", 150, 0, 16, 0, "Boissons", "verre", 200]
+  ["Mojito", 150, 0, 16, 0, "Boissons", "verre", 200],
+  ["Pizza margherita", 243, 11, 30, 10, "Plats", "pizza", 350],
+  ["Pizza reine", 250, 12, 28, 12, "Plats", "pizza", 380],
+  ["Part de pizza", 228, 11, 29, 10, "Plats", "part", 125],
+  ["Calzone", 225, 12, 27, 12, "Plats", "calzone", 400],
+  ["Burger classique", 250, 14, 22, 16, "Plats", "burger", 220],
+  ["Cheeseburger", 260, 15, 21, 17, "Plats", "burger", 200],
+  ["Menu burger-frites", 233, 11, 28, 15, "Plats", "menu", 450],
+  ["Steak-frites", 195, 13, 20, 12, "Plats", "assiette", 400],
+  ["Frites", 262, 3, 34, 14, "Plats", "portion", 130],
+  ["Salade César", 160, 9, 8, 13, "Plats", "assiette", 300],
+  ["Salade composée", 107, 6, 9, 8, "Plats", "assiette", 300],
+  ["Buddha bowl", 125, 8, 20, 7, "Plats", "bowl", 400],
+  ["Poke bowl", 138, 11, 26, 8, "Plats", "bowl", 400],
+  ["Pâtes bolognaise", 171, 8, 22, 6, "Plats", "assiette", 350],
+  ["Pâtes carbonara", 206, 9, 24, 10, "Plats", "assiette", 350],
+  ["Lasagnes", 130, 8, 13, 7, "Plats", "part", 400],
+  ["Risotto", 171, 5, 24, 6, "Plats", "assiette", 350],
+  ["Gratin de pâtes", 160, 8, 20, 8, "Plats", "assiette", 350],
+  ["Couscous royal", 170, 9, 20, 7, "Plats", "assiette", 500],
+  ["Tajine", 130, 8, 12, 6, "Plats", "assiette", 400],
+  ["Curry poulet-riz", 155, 9, 20, 6, "Plats", "assiette", 420],
+  ["Pad thaï", 200, 9, 28, 9, "Plats", "assiette", 350],
+  ["Wok de nouilles", 149, 7, 24, 6, "Plats", "assiette", 350],
+  ["Riz cantonais", 149, 6, 22, 6, "Plats", "assiette", 350],
+  ["Ramen", 112, 6, 15, 4, "Plats", "bol", 500],
+  ["Soupe pho", 84, 7, 13, 2, "Plats", "bol", 500],
+  ["Sushi (12 pièces)", 167, 8, 32, 3, "Plats", "menu", 300],
+  ["Maki (6 pièces)", 209, 4, 30, 2, "Plats", "portion", 110],
+  ["Nems (2)", 238, 7, 22, 10, "Plats", "portion", 80],
+  ["Kebab", 214, 13, 20, 12, "Plats", "kebab", 350],
+  ["Tacos français", 225, 12, 25, 14, "Plats", "tacos", 400],
+  ["Sandwich jambon-beurre", 267, 11, 35, 12, "Plats", "sandwich", 150],
+  ["Sandwich poulet crudités", 215, 11, 25, 9, "Plats", "sandwich", 200],
+  ["Panini", 235, 11, 28, 12, "Plats", "panini", 200],
+  ["Wrap poulet", 205, 11, 24, 10, "Plats", "wrap", 220],
+  ["Bagel garni", 250, 13, 35, 12, "Plats", "bagel", 180],
+  ["Falafel-pita", 187, 9, 26, 10, "Plats", "pita", 300],
+  ["Croque-monsieur (resto)", 239, 13, 20, 15, "Plats", "croque", 180],
+  ["Quiche lorraine (part)", 280, 9, 20, 18, "Plats", "part", 150],
+  ["Omelette (resto)", 178, 13, 2, 14, "Plats", "omelette", 180],
+  ["Crêpe complète", 168, 8, 22, 9, "Plats", "crêpe", 250],
+  ["Galette bretonne", 164, 7, 20, 7, "Plats", "galette", 220],
+  ["Hachis parmentier (assiette)", 143, 7, 14, 7, "Plats", "assiette", 350],
+  ["Blanquette de veau", 160, 10, 10, 10, "Plats", "assiette", 350],
+  ["Bœuf bourguignon", 149, 11, 8, 9, "Plats", "assiette", 350],
+  ["Poulet rôti-frites", 171, 13, 18, 11, "Plats", "assiette", 420],
+  ["Cordon bleu-purée", 189, 12, 16, 13, "Plats", "assiette", 360],
+  ["Escalope milanaise", 200, 15, 18, 13, "Plats", "assiette", 300],
+  ["Fish and chips", 212, 11, 24, 13, "Plats", "assiette", 400],
+  ["Moules-frites", 138, 8, 18, 7, "Plats", "assiette", 550],
+  ["Paella", 148, 9, 18, 6, "Plats", "assiette", 420],
+  ["Chili con carne (assiette)", 147, 10, 16, 7, "Plats", "assiette", 380],
+  ["Tartiflette", 206, 8, 14, 14, "Plats", "assiette", 350],
+  ["Raclette (assiette)", 225, 15, 4, 18, "Plats", "assiette", 400],
+  ["Gratin dauphinois (part)", 175, 4, 15, 10, "Plats", "part", 200],
+  ["Ratatouille (assiette)", 67, 2, 7, 4, "Plats", "assiette", 300],
+  ["Soupe à l'oignon", 100, 5, 12, 5, "Plats", "bol", 300],
+  ["Poulet basquaise", 129, 11, 8, 6, "Plats", "assiette", 350],
+  ["Brochettes-riz", 140, 10, 20, 6, "Plats", "assiette", 400],
+  ["Nuggets-frites", 200, 11, 22, 15, "Plats", "assiette", 350],
+  ["Milkshake", 117, 4, 20, 6, "Plats", "verre", 300],
+  ["Tiramisu", 292, 5, 32, 17, "Plats", "part", 120],
+  ["Fondant au chocolat (resto)", 333, 5, 42, 20, "Plats", "part", 120],
+  ["Crème brûlée", 231, 4, 28, 16, "Plats", "part", 130],
+  ["Profiteroles", 267, 6, 38, 22, "Plats", "part", 180],
+  ["Café gourmand", 267, 5, 42, 18, "Plats", "assiette", 150],
+  ["Île flottante", 160, 5, 32, 6, "Plats", "part", 150]
 ];
 const UNIT_BY_NAME={}; SEED_FOODS.forEach(f=>{if(f[6])UNIT_BY_NAME[f[0]]={unite:f[6],gUnite:f[7]};});
 
@@ -899,18 +967,23 @@ let profile=LS.get('profile',{sexe:'F',age:'',taille:'',poids:'',activite:'1.55'
 let userRecipes=LS.get('recipes',[]);
 let activities=LS.get('activities',[]);
 const saveActivities=()=>LS.set('activities',activities);
-const ACTIVITIES=[
-  {nom:'Marche',met:3.5,emo:'🚶'},{nom:'Marche rapide',met:5,emo:'🚶'},
-  {nom:'Course à pied',met:9.8,emo:'🏃'},{nom:'Vélo',met:7.5,emo:'🚴'},
-  {nom:'Natation',met:8,emo:'🏊'},{nom:'Musculation',met:5,emo:'🏋️'},
-  {nom:'Yoga',met:3,emo:'🧘'},{nom:'HIIT / cardio',met:8.5,emo:'🤸'},
-  {nom:'Football',met:7,emo:'⚽'},{nom:'Tennis / padel',met:7,emo:'🎾'},
-  {nom:'Danse',met:5,emo:'💃'},{nom:'Randonnée',met:6,emo:'🥾'},
-  {nom:'Corde à sauter',met:11,emo:'🪢'},{nom:'Basket',met:6.5,emo:'🏀'},
-  {nom:'Rameur',met:7,emo:'🚣'},{nom:'Elliptique',met:5.5,emo:'🏃'},
-  {nom:'Pilates',met:3.5,emo:'🧘'},{nom:'Boxe',met:9,emo:'🥊'},
-  {nom:'Autre sport',met:6,emo:'🤾'}
+const SEED_ACTIVITIES=[
+  {nom:'Vélo élec · aide moyenne',met:5.5,emo:'🚲'},
+  {nom:'Vélo élec · aide faible',met:6.8,emo:'🚲'},
+  {nom:'Vélo élec · aide élevée',met:4,emo:'🚲'},
+  {nom:'Muscu / cardio',met:6,emo:'🏋️'},
+  {nom:'Futsal',met:8.5,emo:'⚽'},
+  {nom:'Course à pied',met:9.8,emo:'🏃'},
+  {nom:'Marche',met:3.5,emo:'🚶'},
+  {nom:'Marche rapide',met:5,emo:'🚶'},
+  {nom:'Vélo (classique)',met:7.5,emo:'🚴'},
+  {nom:'Natation',met:8,emo:'🏊'}
 ];
+const MET_LEVELS=[{lab:'Très légère',met:2.5},{lab:'Légère',met:3.5},{lab:'Modérée',met:5},{lab:'Soutenue',met:6.8},{lab:'Intense',met:8.5},{lab:'Très intense',met:11}];
+const metLabel=m=>MET_LEVELS.reduce((a,b)=>Math.abs(b.met-m)<Math.abs(a.met-m)?b:a).lab;
+let sportTypes=LS.get('sporttypes',null);
+if(!sportTypes){sportTypes=SEED_ACTIVITIES.map(a=>Object.assign({id:uid()},a));LS.set('sporttypes',sportTypes);}
+const saveSportTypes=()=>LS.set('sporttypes',sportTypes);
 const dayActs=d=>activities.filter(a=>a.date===d);
 const sportKcal=d=>dayActs(d).reduce((s,a)=>s+(a.kcal||0),0);
 const sportKcalCompute=(met,min)=>{const w=parseFloat(profile.poids)||70;return Math.round(met*w*(min/60));};
@@ -1040,7 +1113,7 @@ function renderJournal(){
   const sh=$('#sportHost');const acts=dayActs(curDate);
   if(acts.length){
     let sHtml=`<div class="meal sport"><div class="head"><div class="t"><span class="emo">🏃</span><b>Activité</b></div><span class="kc">−${sport} kcal</span></div>`;
-    acts.forEach(a=>{const def=ACTIVITIES.find(x=>x.nom===a.type);sHtml+=`<div class="entry" data-act="${a.id}"><div class="ebody"><div class="ename">${def?def.emo+' ':''}${a.type}</div><div class="esub">${a.minutes} min</div></div><div class="ekc">−${a.kcal}</div></div>`;});
+    acts.forEach(a=>{const def=sportTypes.find(x=>x.nom===a.type);sHtml+=`<div class="entry" data-act="${a.id}"><div class="ebody"><div class="ename">${def?def.emo+' ':''}${a.type}</div><div class="esub">${a.minutes} min</div></div><div class="ekc">−${a.kcal}</div></div>`;});
     sHtml+=`</div>`;sh.innerHTML=sHtml;
     $$('#sportHost .entry[data-act]').forEach(el=>el.onclick=()=>openSportSheet(el.dataset.act));
   }else sh.innerHTML='';
@@ -1070,9 +1143,9 @@ function renderJournal(){
 }
 function openSportSheet(editId){
   const ed=(typeof editId==='string')?activities.find(a=>a.id===editId):null;
-  let type=ed?ed.type:ACTIVITIES[0].nom, minutes=ed?ed.minutes:30;
-  function preview(){const def=ACTIVITIES.find(x=>x.nom===type);return sportKcalCompute(def?def.met:6,minutes);}
-  const opts=ACTIVITIES.map(a=>`<option value="${a.nom}" ${a.nom===type?'selected':''}>${a.emo} ${a.nom}</option>`).join('');
+  let type=ed?ed.type:(sportTypes[0]?sportTypes[0].nom:''), minutes=ed?ed.minutes:30;
+  function preview(){const def=sportTypes.find(x=>x.nom===type);return sportKcalCompute(def?def.met:6,minutes);}
+  const opts=sportTypes.map(a=>`<option value="${a.nom}" ${a.nom===type?'selected':''}>${a.emo} ${a.nom}</option>`).join('');
   openSheet(`
     <h2>${ed?'Modifier la séance':'Ajouter une séance'}</h2>
     ${ed?'':`<div class="type-seg" id="spTypeSeg"><button data-t="food">🍽️ Aliment</button><button class="on" data-t="sport">🏃 Sport</button></div>`}
@@ -1081,7 +1154,9 @@ function openSportSheet(editId){
     <div class="day-total"><span>Dépense estimée</span><span><b id="spKc">${preview()}</b> kcal</span></div>
     ${!parseFloat(profile.poids)?'<p class="hint" style="margin-top:8px">Renseigne ton poids dans le profil pour une estimation plus juste (calcul basé sur 70 kg par défaut).</p>':''}
     <div class="sheet-foot">${ed?'<button class="btn danger" id="spDel">Supprimer</button>':''}<button class="btn" id="spSave">${ed?'Enregistrer':'Ajouter'}</button></div>
+    ${ed?'':'<button class="btn ghost sm" id="spManage" style="width:100%;margin-top:10px">⚙︎ Gérer mes activités</button>'}
   `);
+  const spm=$('#spManage'); if(spm)spm.onclick=openSportTypesSheet;
   const sts=$('#spTypeSeg'); if(sts){sts.querySelector('[data-t="food"]').onclick=()=>openEntrySheet(autoMeal(),null);}
   const upd=()=>{$('#spKc').textContent=preview();};
   $('#spType').onchange=e=>{type=e.target.value;upd();};
@@ -1096,6 +1171,34 @@ function openSportSheet(editId){
   if(ed){const d=$('#spDel');if(d)d.onclick=()=>{activities=activities.filter(a=>a.id!==ed.id);saveActivities();closeSheet();renderJournal();toast('Séance supprimée');};}
 }
 function autoMeal(){const h=new Date().getHours();if(h<11)return'petit-dej';if(h<14)return'dejeuner';if(h>=18&&h<22)return'diner';return'collation';}
+function openSportTypesSheet(){
+  const rows=sportTypes.map(a=>`<div class="entry" data-t="${a.id}"><div class="ebody"><div class="ename">${a.emo} ${a.nom}</div><div class="esub">Intensité ${metLabel(a.met).toLowerCase()}</div></div><div class="ekc" style="color:var(--ink-soft)">›</div></div>`).join('')||'<p class="hint">Aucune activité. Ajoute la tienne.</p>';
+  openSheet(`<h2>Mes activités</h2>
+    <div style="margin:4px 0 6px">${rows}</div>
+    <div class="sheet-foot"><button class="btn" id="stAdd">＋ Ajouter une activité</button></div>`);
+  $$('#sheet .entry[data-t]').forEach(el=>el.onclick=()=>openSportTypeEdit(el.dataset.t));
+  $('#stAdd').onclick=()=>openSportTypeEdit(null);
+}
+function openSportTypeEdit(id){
+  const t=id?sportTypes.find(x=>x.id===id):null;
+  let met=t?t.met:5;
+  const lvlOpts=MET_LEVELS.map(L=>`<option value="${L.met}" ${metLabel(met)===L.lab?'selected':''}>${L.lab}</option>`).join('');
+  openSheet(`<h2>${t?'Modifier l\'activité':'Nouvelle activité'}</h2>
+    <div class="row" style="display:flex;gap:10px">
+      <div class="field" style="width:76px"><label>Icône</label><input class="input" id="stEmo" maxlength="2" value="${t?t.emo:'🏃'}" style="text-align:center"></div>
+      <div class="field" style="flex:1"><label>Nom</label><input class="input" id="stNom" value="${t?t.nom.replace(/"/g,'&quot;'):''}" placeholder="ex. Vélo élec · aide moyenne"></div>
+    </div>
+    <div class="field"><label>Intensité de l'effort</label><select class="input" id="stMet">${lvlOpts}</select></div>
+    <p class="hint">L'intensité sert à estimer les calories brûlées (avec ta durée et ton poids).</p>
+    <div class="sheet-foot">${t?'<button class="btn danger" id="stDel">Supprimer</button>':''}<button class="btn" id="stSave">${t?'Enregistrer':'Ajouter'}</button></div>`);
+  $('#stSave').onclick=()=>{
+    const nom=$('#stNom').value.trim(),emo=$('#stEmo').value.trim()||'🏃',m=parseFloat($('#stMet').value)||5;
+    if(!nom){toast('Donne un nom');return;}
+    if(t){t.nom=nom;t.emo=emo;t.met=m;}else sportTypes.push({id:uid(),nom,emo,met:m});
+    saveSportTypes();openSportTypesSheet();toast(t?'Activité modifiée':'Activité ajoutée ✓');
+  };
+  if(t){const d=$('#stDel');if(d)d.onclick=()=>{if(confirm('Supprimer cette activité de ta liste ?')){sportTypes=sportTypes.filter(x=>x.id!==t.id);saveSportTypes();openSportTypesSheet();toast('Activité supprimée');}};}
+}
 function openRecipeEntryEdit(e){
   let meal=e.repas,portions=e.qte;
   const mealSeg=REPAS.map(r=>`<button data-v="${r.key}" class="${r.key===meal?'on':''}">${r.emo} ${r.label}</button>`).join('');
@@ -1560,7 +1663,7 @@ function openImportRecipeSheet(){
 }
 
 /* Statistiques */
-let statDays=14,ctxKey='humeur',charts={};
+let statDays=14,ctxKey='humeur',charts={},hoursMode='count';
 let calMonth=(()=>{const t=new Date(todayISO()+'T12:00');return new Date(t.getFullYear(),t.getMonth(),1);})();
 const GR='#7A1F2B',GRD='#511019',SAGE='#6E7C56',OCH='#C0883A';
 function lastDays(d){const out=[],base=new Date(todayISO()+'T12:00');for(let i=d-1;i>=0;i--){const x=new Date(base);x.setDate(x.getDate()-i);out.push(x.toISOString().slice(0,10));}return out;}
@@ -1585,10 +1688,10 @@ function renderStats(){
   if(target)ds.push({label:'Objectif',data:days.map(()=>target),borderColor:SAGE,borderDash:[6,5],pointRadius:0,borderWidth:1.8,fill:false});
   mkChart('chKcal',{type:'line',data:{labels:days.map(dlabel),datasets:ds},options:baseOpts({legend:!!target})});
   const hours=new Array(24).fill(0);
-  entries.filter(e=>days.includes(e.date)&&e.heure).forEach(e=>{const h=parseInt(String(e.heure).slice(0,2));if(h>=0&&h<24)hours[h]++;});
+  entries.filter(e=>days.includes(e.date)&&e.heure).forEach(e=>{const h=parseInt(String(e.heure).slice(0,2));if(h>=0&&h<24)hours[h]+=hoursMode==='kcal'?entryKcal(e):1;});
   const hLabels=hours.map((_,h)=>h%3===0?h+'h':'');
   const ho=baseOpts({});ho.scales.x.ticks.autoSkip=false;ho.scales.x.ticks.maxRotation=0;ho.scales.y.ticks.precision=0;
-  mkChart('chHours',{type:'bar',data:{labels:hLabels,datasets:[{label:'Prises',data:hours,backgroundColor:OCH,borderRadius:5,maxBarThickness:16}]},options:ho});
+  mkChart('chHours',{type:'bar',data:{labels:hLabels,datasets:[{label:hoursMode==='kcal'?'kcal':'Prises',data:hours,backgroundColor:OCH,borderRadius:5,maxBarThickness:16}]},options:ho});
   const wpts=weights.filter(w=>w.date>=days[0]);
   mkChart('chWeight',{type:'line',data:{labels:wpts.length?wpts.map(p=>dlabel(p.date)):['—'],datasets:[{label:'Poids (kg)',data:wpts.map(p=>p.poids),borderColor:GRD,backgroundColor:'rgba(81,16,25,.08)',fill:true,tension:.3,pointRadius:4,pointBackgroundColor:GRD,borderWidth:2.5}]},options:baseOpts({yTitle:'kg',begin:false})});
   const mealSum=REPAS.map(r=>entries.filter(e=>days.includes(e.date)&&e.repas===r.key).reduce((s,e)=>s+entryKcal(e),0));
@@ -1703,7 +1806,8 @@ function initApp(){
   const xs=$('#extraSel'); if(xs)xs.onchange=()=>renderExtraChart(xs.value);
   $('#calPrev').onclick=()=>{calMonth.setMonth(calMonth.getMonth()-1);renderCalendar();};
   $('#calNext').onclick=()=>{calMonth.setMonth(calMonth.getMonth()+1);renderCalendar();};
-  $('#wipeBtn').onclick=()=>{if(confirm('Tout effacer ? Cette action est définitive. Pense à exporter ta sauvegarde avant.')){['foods','entries','weights','profile','recipes','activities'].forEach(k=>localStorage.removeItem('ccj_'+k));location.reload();}};
+  $$('#hoursMode button').forEach(b=>b.onclick=()=>{hoursMode=b.dataset.v;$$('#hoursMode button').forEach(x=>x.classList.toggle('on',x===b));renderStats();});
+  $('#wipeBtn').onclick=()=>{if(confirm('Tout effacer ? Cette action est définitive. Pense à exporter ta sauvegarde avant.')){['foods','entries','weights','profile','recipes','activities','sporttypes'].forEach(k=>localStorage.removeItem('ccj_'+k));location.reload();}};
   const cp=$('#changePin'); if(cp)cp.onclick=()=>{
     const a=prompt('Nouveau code à 4 chiffres :');if(a===null)return;
     if(!/^\d{4}$/.test(a)){toast('Il faut 4 chiffres');return;}
@@ -1712,7 +1816,7 @@ function initApp(){
     localStorage.setItem('ccj_pincode',a);toast('Code mis à jour');
   };
   const bb=$('#backupBtn'); if(bb)bb.onclick=()=>{
-    const payload={app:'carnet',version:1,date:new Date().toISOString(),data:{foods,entries,weights,profile,recipes:userRecipes,activities}};
+    const payload={app:'carnet',version:1,date:new Date().toISOString(),data:{foods,entries,weights,profile,recipes:userRecipes,activities,sporttypes:sportTypes}};
     const blob=new Blob([JSON.stringify(payload)],{type:'application/json'});
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='carnet-sauvegarde-'+todayISO()+'.json';
     document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
@@ -1729,6 +1833,7 @@ function initApp(){
         if(d.weights)LS.set('weights',d.weights); if(d.profile)LS.set('profile',d.profile);
         if(d.recipes)LS.set('recipes',d.recipes);
         if(d.activities)LS.set('activities',d.activities);
+        if(d.sporttypes)LS.set('sporttypes',d.sporttypes);
         toast('Restauration réussie ✓'); setTimeout(()=>location.reload(),600);
       }catch(e){toast('Fichier illisible');} };
       reader.readAsText(f); rf.value='';
